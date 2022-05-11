@@ -53,14 +53,25 @@ class EmployeeController extends Controller
         $this->middleware('permission:hc-edit', ['only' => ['edit','update']]);
         $this->middleware('permission:hc-delete', ['only' => ['destroy']]);
         $this->middleware('permission:hc-activate', ['only' => ['activate']]);
-         $this->middleware('permission:hc-summary', ['only' => ['staffsummary']]);
-         $this->middleware('permission:set-default', ['only' => ['sethours','setdefaulthrs']]);
+        $this->middleware('permission:hc-summary', ['only' => ['staffsummary']]);
+        $this->middleware('permission:set-default', ['only' => ['sethours','setdefaulthrs']]);
 
     }
 
     public function index()
     {
-        $staffs = Employee::where('outsource','=','no')->get();
+        /*$so = 'Riveting';
+        return $staffs1 = Employee::with('shop')
+                    ->whereHas('shop', function($query) use ($so){
+                        $query->where('shop_name',$so);
+                    })->get();*/
+
+        $staffs = Employee::where('outsource','no')->get();
+        /*$att = 'yes';
+        return $staffs = Shop::whereHas('employees', function($query) use ($att){
+            return $query->where('outsource',$att);
+        })->get();*/
+
         return view('employee.index')->with('staffs', $staffs);
     }
 
@@ -71,16 +82,10 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $titles = StaffTitle::pluck('description', 'id');
         $shops = Shop::Where('overtime','=','1')->pluck('report_name', 'id');
-        //$divs = Division::pluck('division_name', 'id');
-        //$depts = Department::pluck('department_name', 'id');
-        $empcats = EmployeeCategory::pluck('emp_category', 'id');
 
         $data = array(
-            'titles'=> $titles,
             'shops' => $shops,
-            'empcats'=>$empcats,
         );
         return view('employee.create')->with($data);
     }
@@ -102,6 +107,7 @@ class EmployeeController extends Controller
             'shop' => 'required',
             'teamleader' => 'required',
             'status' => 'required',
+            'attachee'=>'required',
         ]);
 
         if ($validator->fails()) {
@@ -111,19 +117,32 @@ class EmployeeController extends Controller
 
         try{
             DB::beginTransaction();
-            $staff = new Employee;
+
             $existstaff = Employee::where('staff_no', '=', $request->input('staffno'))->first();
 
             if($existstaff == null){
-                $staff->unique_no = Employee::max('unique_no') + 1;
+                $staff = new Employee([
+                    'unique_no' => Employee::max('unique_no') + 1,
+                    'staff_no' => $request->input('staffno'),
+                    'staff_name' => $request->input('staffname'),
+                    'shop_id' => $request->input('shop'),
+                    'Department_Description' => $request->input('department'),
+                    'Category' => $request->input('category'),
+                    'team_leader' => $request->input('teamleader'),
+                    'attachee' => $request->input('attachee'),
+                    'status' => $request->input('status'),
+                    'user_id' => auth()->user()->id,
+                ]);
+                /*$staff->unique_no = Employee::max('unique_no') + 1;
                 $staff->staff_no = $request->input('staffno');
                 $staff->staff_name = $request->input('staffname');
                 $staff->shop_id = $request->input('shop');
                 $staff->Department_Description = $request->input('department');
                 $staff->Category = $request->input('category');
                 $staff->team_leader = $request->input('teamleader');
+                $staff->attachee = $request->input('attachee');
                 $staff->status = $request->input('status');
-                $staff -> user_id = auth()->user()->id;
+                $staff -> user_id = auth()->user()->id;*/
 
                 $staff->save();
                 DB::commit();
@@ -195,6 +214,7 @@ class EmployeeController extends Controller
             'shop' => 'required',
             'teamleader' => 'required',
             'status' => 'required',
+            'attachee' => 'required',
         ]);
 
 
@@ -218,6 +238,8 @@ class EmployeeController extends Controller
                 $staff->shop_id = $request->input('shop');
                 $staff->team_leader = $request->input('teamleader');
                 $staff->status = $request->input('status');
+                $staff->attachee = $request->input('attachee');
+
 				$staff->outsource = 'no';
                 $staff->save();
             DB::commit();

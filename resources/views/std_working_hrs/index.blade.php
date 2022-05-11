@@ -62,7 +62,7 @@
                         <table id="scroll_ver" class="table table-striped table-bordered display"
                                         style="width:100%">
                             <thead class="red">
-                                <tr>                                    
+                                <tr>
                                     <th>
                                         Model Name.
                                     </th>
@@ -77,7 +77,7 @@
                                 @if(count($models) > 0)
                                 @foreach($models as $model)
                                     <tr style="">
-                                        
+
                                         <td>
                                             {{$model->model_name}}
                                         </td>

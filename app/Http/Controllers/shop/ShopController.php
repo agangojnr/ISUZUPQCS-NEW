@@ -73,7 +73,7 @@ class ShopController extends Controller
      */
     public function sections(Request $request)
     {
-        $shops = Shop::where('check_shop','=',1)->get(['id','shop_name','no_of_sections']);
+        $shops = Shop::where('check_shop','=',1)->orWhere('buffer',1)->get(['id','shop_name','no_of_sections']);
         $data = array(
             'shops'=>$shops,
         );

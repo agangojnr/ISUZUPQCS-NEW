@@ -30,9 +30,9 @@
     <!-- Container fluid  -->
     <!-- ============================================================== -->
     <div class="container-fluid">
-        
 
-       
+
+
 
 
         <div class="row">
@@ -42,16 +42,16 @@
                 <div class="btn-list">
                     <a type="button" class="btn btn-outline-primary btn-rounded" href=""><i
                         class="fas fa-check"></i> TODAY </a>
-        
+
                         <a type="button" class="btn btn-outline-secondary btn-rounded" href=""><i
                             class="fas fa-check"></i> MTD </a>
-                    
-                
-                   
-               
+
+
+
+
                 </div>
             </div>
-        
+
             <div class="col-lg-4  mb-6">
                 <div class="btn-list">
                     <button type="button" class="btn btn-outline-primary btn-rounded"><i
@@ -60,23 +60,23 @@
                             class="fas fa-check"></i> CV</button>
                     <button type="button" class="btn btn-outline-success btn-rounded"><i
                             class="fas fa-check"></i> Lcv</button>
-               
+
                 </div>
             </div>
-        
-        
+
+
             <div class="col-lg-4  mb-2">
                 <div class="btn-list">
                     <button type="button" class="btn btn-outline-success btn-rounded"><i
                         class="fas fa-check"></i> Export</button>
-               
+
                 </div>
             </div>
-        
-         
+
+
         </div>
 
-        
+
         <div class="row">
 
             <div class="col-12">
@@ -94,7 +94,7 @@
 
 
 
-       
+
     <div class="col-4">
         <button type="submit" class="btn btn-success mt-4">Filter By Date</button>
     </div>
@@ -111,14 +111,14 @@
 
 
                 <div class="card-body">
-                   
+
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered" >
                             <thead>
 
                                    <tr>
                                     <th colspan = "{{(count($shops)*2)+1}}" ></th>
-                                  
+
 
                                 </tr>
 
@@ -128,8 +128,8 @@
                                       @foreach ($shops as $item)
                                     <th colspan = "2">{{$item->shop_name}}</th>
                                     @endforeach
-                                     
-                              
+
+
 
                                 </tr>
 
@@ -138,12 +138,12 @@
                                     <th style="background-color: {{$item->color_code}}" >Units</th>
                                     <th style="background-color: {{$item->color_code}}" >Defects</th>
                                     @endforeach
-                                    
-                                    
-                                 
+
+
+
                                 </tr>
 
-                              
+
 
                             </thead>
 
@@ -158,9 +158,9 @@
                                           <td style="background-color: {{$shop->color_code}}">{{$drl_arr[$vehicle->model_id][$vehicle->lot_no][$shop->id]['units']}}</td>
                                            <td style="background-color: {{$shop->color_code}}">{{$drl_arr[$vehicle->model_id][$vehicle->lot_no][$shop->id]['defects']}}</td>
                                     @endforeach
-                                      
-                                       
-                                        
+
+
+
                                     </tr>
                                 @endforeach
                                 @endif
@@ -180,7 +180,7 @@
                                     <th><strong>ACTUAL MTD SCORE</strong></th>
                                      @foreach ($shops as $item)
                         <th class=" text-center" colspan="2"  >{{   drl_per_shop_today($item->id, decrypt_data($date))['drl'] }}</th>
-                       
+
                         @endforeach
                                 </tr>
 
@@ -188,7 +188,7 @@
                                     <th ><strong>TARGET</strong></th>
                                      @foreach ($shops as $item)
                         <th class=" text-center" colspan="2" >{{ drl_per_shop_today($item->id, decrypt_data($date))['drl_target_value']  }}</th>
-                       
+
                         @endforeach
                                 </tr>
 
@@ -197,18 +197,18 @@
                                  <th colspan = "{{(count($shops))+1}}"" >PLANT DRL : <strong>{{ drl_today(decrypt_data($date))['drl'] }}</strong></th>
 
                                  <th colspan = "{{(count($shops))}}"" >PLANT TARGET : <strong>{{ drl_today(decrypt_data($date))['drl_target_value'] }} </strong></th>
-                      
+
 
                     </tr>
 
                             </tfoot>
-                        
 
 
 
-                        
+
+
                         </table>
-                 
+
                     </div>
                 </div>
             </div>
@@ -228,13 +228,13 @@
                                             </div>
 
                                             <div class="modal-body">
-                                              
+
 
                                                  {{ Form::open(['route' => 'filtertoday', 'class' => 'form-horizontal', 'role' => 'form', 'method' => 'post', 'id' => 'create-user'])}}
 
                                                        {!! Form::hidden('select_id', 1); !!}
 
-                                                        
+
 
 
                                                     <div class="form-group">
@@ -246,11 +246,11 @@
 
 
 
-                                                     
 
-                                                   
 
-                                                    
+
+
+
 
 
                                                     <div class="form-group text-center">
@@ -278,13 +278,13 @@
                                             </div>
 
                                             <div class="modal-body">
-                                              
+
 
                                                  {{ Form::open(['route' => 'filtertoday', 'class' => 'form-horizontal', 'role' => 'form', 'method' => 'post', 'id' => 'create-user'])}}
 
                                                       {!! Form::hidden('select_id', 2); !!}
 
-                                                       
+
 
 
                                                     <div class="form-group">
@@ -302,11 +302,11 @@
 
 
 
-                                                     
 
-                                                   
 
-                                                    
+
+
+
 
 
                                                     <div class="form-group text-center">
@@ -325,8 +325,8 @@
    {{ Html::style('assets/libs/datepicker/datepicker.min.css') }}
       {{ Html::style('assets/extra-libs/toastr/dist/build/toastr.min.css') }}
     {{ Html::style('assets/libs/sweetalert2/dist/sweetalert2.min.css') }}
- 
-    
+
+
 @endsection
 
 
@@ -345,28 +345,28 @@
 
 
       $('#daily-modal').on('shown.bs.modal', function () {
-      
+
            $('[data-toggle="datepicker"]').datepicker({
             autoHide: true,
             format: 'dd-mm-yyyy',
 
-            
+
         });
       $('.from_date').datepicker('setDate', 'today');
-            
+
          });
-   
+
     $('#custom').on('shown.bs.modal', function () {
-      
+
            $('[data-toggle="datepicker"]').datepicker({
             autoHide: true,
             format: 'dd-mm-yyyy',
 
-            
+
         });
       $('.from_custom_date').datepicker('setDate', 'today');
        $('.to_custom__date').datepicker('setDate', 'today');
-            
+
          });
 
 

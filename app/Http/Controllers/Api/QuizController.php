@@ -24,9 +24,9 @@ class QuizController extends Controller
 
           public function quiz($id,$vid,$shop_id)
     {
-       
-         $master = array();    
-        
+
+         $master = array();
+
          $master['category'] = Querycategory::find($id);
         /* $master['query']  = Routingquery::where('category_id',$id)->with(['getanswer'=>function ($q)  use ($vid)  {
         $q->where('vehicle_id', $vid);
@@ -47,13 +47,13 @@ class QuizController extends Controller
          //check if value exist in array
          if(!empty($queryresults)){
 
-           
-           
+
+
         foreach($queryresults as $queryresult){
 
      $checkanswered=$exist=$this->checkanswerbyshop($queryresult->id,$vid,$shop_id);
-      
-    
+
+
      $haserror=$exist=$this->checkhaserrorbyshop($queryresult->id,$vid,$shop_id,'Yes');
 
 
@@ -74,7 +74,7 @@ $answer=$answers_given->answer;
            $total_options=$queryresult->category->total_options;
            //$answers_given=json_decode($queryresult->category->answers,true);
            $correct_answers=$queryresult->category->correct_answers;
-      
+
       }else{
         //use query category
         $quiz_type=$queryresult->quiz_type;
@@ -103,15 +103,15 @@ $answer=$answers_given->answer;
             'haserror' => $haserror,
             'can_sign' => $queryresult->can_sign,
             'answer_given' => $answer,
-          
-            
+
+
 
         ];
 
 
         }
 }
-     
+
         $master['query'] = $data;
 
         return response()->json(['msg' => null, 'data' => $master, 'success' => true], 200);
@@ -121,15 +121,15 @@ $answer=$answers_given->answer;
 
        public function loadquery($cat_id,$quiz_id)
     {
-       
+
             $master = array();
-        
-       
+
+
         $data = Querycategory::find($cat_id);
        $master['category']=$data;
        $master['options']= json_decode($data->answers ,true);
        $master['dafaultoptions']= Defaultanswer::get(['name']);
-        
+
 
        $query= Routingquery::find($quiz_id);
        $master['routings'] = Routingquery::find($quiz_id);
@@ -138,13 +138,13 @@ $answer=$answers_given->answer;
        if($query->use_defferent_routing=='No'){
         //use master
           $master['options']= json_decode($data->answers ,true);
-         
+
            $master['quiz_type']=$data->quiz_type;
            $master['total_options']=$data->total_options;
            $master['answers']=$data->answers;
            $master['correct_answers']=$data->correct_answers;
 
-         
+
       }else{
         //use query category
         $master['quiz_type']=$query->quiz_type;
@@ -156,8 +156,8 @@ $answer=$answers_given->answer;
       }
 
 
-        
-     
+
+
 
 
     }
@@ -191,11 +191,11 @@ if($data['quiz_type']=='multiple' && $data['answer']=='NOK'){
     if(empty($data['defects'] )){
 
        $can_save=false;
-    $error_message='Some queries marked NOK but no defect  captured!!!'; 
+    $error_message='Some queries marked NOK but no defect  captured!!!';
 
     }
 
-  
+
     }//end defect check
 
 if($data['quiz_type']=='others' && !empty($data['answer'])   ){
@@ -203,14 +203,14 @@ if($data['quiz_type']=='others' && !empty($data['answer'])   ){
     if(empty($data['defects'] )){
 
        $can_save=false;
-    $error_message='Defect Category Not  Selected!!!'; 
+    $error_message='Defect Category Not  Selected!!!';
 
     }
 
-  
+
     }//end others  check
 
-   
+
 
 
     if($data['can_sign']=='Yes' && !empty($data['answer']) ){
@@ -218,15 +218,15 @@ if($data['quiz_type']=='others' && !empty($data['answer'])   ){
     if(empty($data['signature'] )){
 
        $can_save=false;
-    $error_message='Make sure you capture all signatures!!!'; 
+    $error_message='Make sure you capture all signatures!!!';
 
     }
 
-  
+
     }//end can sign check
 
 
-    
+
 
 
 
@@ -236,12 +236,12 @@ if($data['quiz_type']=='others' && !empty($data['answer'])   ){
  if(!array_filter($answer_check)){// check if all items are empty
 
     $can_save=false;
-    $error_message='Please Mark atleast One Query!!!'; 
+    $error_message='Please Mark atleast One Query!!!';
 
     }
 
  DB::beginTransaction();
-  
+
 if($can_save){
 //save data
     foreach($datas as $datatosave){
@@ -328,7 +328,7 @@ $has_error='Yes';
 }
 
 }else if($datatosave['total_options']==5){  /// answer less than or equals to
- 
+
       if ($datatosave['answer'] <= $datatosave['correct_answers']  ){
 
 $has_error='No';
@@ -353,7 +353,7 @@ $has_error='Yes';
     $additional_query=1;
     $answer='NOK';
 
-    
+
 
 }else{
 
@@ -378,7 +378,7 @@ if($datatosave['can_sign']=='Yes'){
 
         if ($datatosave['signature']  && $datatosave['signature'] != "undefined") {
             $signature = (new AppHelper)->saveBase64Png($datatosave['signature']);
-            
+
         }
      }
 
@@ -403,7 +403,7 @@ if($datatosave['can_sign']=='Yes'){
 
      if($datatosave['quiz_type']=='multiple' &&  $datatosave['answer']=='NOK'){
 
-        
+
          $arr = $datatosave['defects'];
          $defectsave=array();
         foreach ($arr as $value) {
@@ -418,7 +418,7 @@ if($datatosave['can_sign']=='Yes'){
 
              Querydefect::create($defectsave);
 
-                        
+
         }
 
 
@@ -427,8 +427,8 @@ if($datatosave['can_sign']=='Yes'){
 
        if($datatosave['quiz_type']=='others'){
 
-        
-        
+
+
 
 
 
@@ -447,7 +447,7 @@ if($datatosave['can_sign']=='Yes'){
 
 
 
-    
+
 
     }
 
@@ -462,14 +462,14 @@ if($datatosave['can_sign']=='Yes'){
             $defectsave['category_id'] = $datatosave['quiz_id'];
             $defectsave['routingquery_id'] = $datatosave['item_id'];
 
-            
+
             $defectsave['shop_id'] = $datatosave['shop_id'];
             $defectsave['vehicle_id'] = $datatosave['vehicle_id'];
             $defectsave['defect_name'] = $datatosave['answer'];
             $defectsave['is_defect'] = 'Yes';
             $defectsave['is_addition'] = 'No';
 
-             Querydefect::create($defectsave);              
+             Querydefect::create($defectsave);
 
     }
 
@@ -491,13 +491,13 @@ DB::commit();
 return response()->json(['msg' =>   'Record Saved Successfully', 'data' => null, 'success' => true], 200);
 
 
-    
+
 
    }else{  //end can save
 
        return response()->json(['msg' => $error_message, 'data' => null, 'success' => false], 200);
 
-}//end can save check  
+}//end can save check
 
 
 
@@ -506,21 +506,16 @@ return response()->json(['msg' =>   'Record Saved Successfully', 'data' => null,
 
 
 }//end empty check
-   
 
-  
 
  } catch (\Exception $e) {
     DB::rollBack(); // roll back transaction if not completely saved
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
      return response()->json(['msg' => 'Something Went Wrong', 'data' => null , 'success' => false], 200);
-                    
-            
+
+
             }
-
-
-
 
     }
 
@@ -542,7 +537,7 @@ return response()->json(['msg' =>   'Record Saved Successfully', 'data' => null,
         return  Queryanswer::where('query_id', $value)->where('vehicle_id',$value1)->where('shop_id',$value2)->where('has_error',$value3)->exists();
     }
 
-    
+
     public function index()
     {
         //

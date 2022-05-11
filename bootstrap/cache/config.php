@@ -4,13 +4,13 @@
     'name' => 'PQCS',
     'env' => 'local',
     'debug' => true,
-    'url' => 'http://172.16.16.57/',
+    'url' => 'https://pqcs.xyz',
     'asset_url' => NULL,
     'timezone' => 'Africa/Nairobi',
     'locale' => 'en',
     'fallback_locale' => 'en',
     'faker_locale' => 'en_US',
-    'key' => 'base64:niZWAXlPIbrq7jNE2KeWo3Mkjv1qo5FGuRa4RpgWfgA=',
+    'key' => 'base64:1a1RvFeaE5MDoa/CBvXo0ukOBLgWdpuR3t7qUmSYpIM=',
     'cipher' => 'AES-256-CBC',
     'providers' => 
     array (
@@ -286,14 +286,14 @@
   ),
   'database' => 
   array (
-    'default' => 'sqlsrv',
+    'default' => 'mysql',
     'connections' => 
     array (
       'sqlite' => 
       array (
         'driver' => 'sqlite',
         'url' => NULL,
-        'database' => 'PQCSTST',
+        'database' => 'pqcs',
         'prefix' => '',
         'foreign_key_constraints' => true,
       ),
@@ -301,11 +301,11 @@
       array (
         'driver' => 'mysql',
         'url' => NULL,
-        'host' => '172.16.16.57',
-        'port' => '1433',
-        'database' => 'PQCSTST',
-        'username' => 'pqcstest',
-        'password' => 'Kenya123',
+        'host' => '127.0.0.1',
+        'port' => '3306',
+        'database' => 'pqcs',
+        'username' => 'root',
+        'password' => '',
         'unix_socket' => '',
         'charset' => 'utf8mb4',
         'collation' => 'utf8mb4_unicode_ci',
@@ -321,11 +321,11 @@
       array (
         'driver' => 'pgsql',
         'url' => NULL,
-        'host' => '172.16.16.57',
-        'port' => '1433',
-        'database' => 'PQCSTST',
-        'username' => 'pqcstest',
-        'password' => 'Kenya123',
+        'host' => '127.0.0.1',
+        'port' => '3306',
+        'database' => 'pqcs',
+        'username' => 'root',
+        'password' => '',
         'charset' => 'utf8',
         'prefix' => '',
         'prefix_indexes' => true,
@@ -336,11 +336,11 @@
       array (
         'driver' => 'sqlsrv',
         'url' => NULL,
-        'host' => '172.16.16.57',
-        'port' => '1433',
-        'database' => 'PQCSTST',
-        'username' => 'pqcstest',
-        'password' => 'Kenya123',
+        'host' => '127.0.0.1',
+        'port' => '3306',
+        'database' => 'pqcs',
+        'username' => 'root',
+        'password' => '',
         'charset' => 'utf8',
         'prefix' => '',
         'prefix_indexes' => true,
@@ -543,7 +543,7 @@
       array (
         'driver' => 'local',
         'root' => 'C:\\xampp\\htdocs\\PQCS V1.0\\storage\\app/public',
-        'url' => 'http://172.16.16.57//storage',
+        'url' => 'https://pqcs.xyz/storage',
         'visibility' => 'public',
       ),
       's3' => 
@@ -836,7 +836,7 @@
     'failed' => 
     array (
       'driver' => 'database-uuids',
-      'database' => 'sqlsrv',
+      'database' => 'mysql',
       'table' => 'failed_jobs',
     ),
   ),
@@ -978,7 +978,7 @@
     array (
       'database' => 
       array (
-        'connection' => 'sqlsrv',
+        'connection' => 'mysql',
       ),
     ),
   ),

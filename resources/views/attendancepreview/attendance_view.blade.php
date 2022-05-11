@@ -16,7 +16,7 @@
         <h4 class="card-title">Review Attendance</h4>
     </div>
     <div class="card-body">
-        {{ Form::open(['route' => 'checkattendance', 'method' => 'GET'])}}
+        {{ Form::open(['route' => 'checkattendance1', 'method' => 'GET'])}}
         @csrf
         <div class="p-3 bg-white mb-3 rounded-pill align-items-center">
 
@@ -143,7 +143,7 @@
                     <span class="mb-2 badge badge-primary">{{$reviews[$i]}}</span>
                     @endfor
                 </div>
-            @endif 
+            @endif
         @endif
 
 

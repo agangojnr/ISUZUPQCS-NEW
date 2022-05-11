@@ -91,7 +91,7 @@
                              <button class="nav-link btn-danger rounded-pill d-flex align-items-center px-3 mr-5" style="background-color:#da251c; ">
                            <i class="icon-note m-1"></i><span class="d-none d-md-block font-14">Proceed to Record</span></button>
                          </li>
-                @else
+                        @else
                         <div class="form-group ml-5" style="font-size: 18px;">
                             <label class="text-danger">Sorry, No section allocated for the user!</label>
                             <h5 class="text-danger">Contact Admin for allocation.</h5>

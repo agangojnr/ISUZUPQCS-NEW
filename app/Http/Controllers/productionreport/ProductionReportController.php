@@ -24,7 +24,7 @@ use App\Exports\DrlExport;
 
 class ProductionReportController extends Controller
 {
-    
+
 
     public function currentunitstage()
     {
@@ -64,7 +64,7 @@ class ProductionReportController extends Controller
 
 
      ->make(true);
-       
+
 
     }
 
@@ -75,10 +75,10 @@ class ProductionReportController extends Controller
 
       public function moveunit($id,$from,$to)
     {
-        
+
 
         if (request()->ajax()) {
-          
+
             $shops = Shop::pluck('shop_name', 'id');
             return view('production_report.moveunit')->with(compact('id','shops'));
         }
@@ -92,8 +92,8 @@ class ProductionReportController extends Controller
       $period=decrypt_data($period);
       $date=decrypt_data($date);
 
-    
-     
+
+
 
 
 //plant section
@@ -104,20 +104,20 @@ class ProductionReportController extends Controller
         if($period=='today'){
 
 
-    
-       
-      
 
 
-        
+
+
+
+
           $heading = $heading='DAILY  DIRECT RUN LOSS RESULTS FOR '. date("d F Y", strtotime($date)) ;
           $start=date_for_database($date);
           $first_of_month=Carbon::createFromFormat('Y-m-d', $start)->startOfMonth();
           $first_of_month=$first_of_month->format("Y-m-d");
 
-          
 
-     
+
+
      //Units Produced per month
 
      //$vehicles = vehicle_units::groupBy('lot_no','model_id')->where('sheduled_month', $first_of_month)->get(['lot_no','model_id']);
@@ -137,10 +137,10 @@ class ProductionReportController extends Controller
      unset($shops[0],$shops[5],$shops[7],$shops[10]);
 
 
-    
+
 
      $drl_arr = [];
-        
+
      $unit_count = [];
       $i=1;
     $vehicleid = [];
@@ -154,38 +154,38 @@ class ProductionReportController extends Controller
           $shopid = $shop->id;
 
           $shop_array=Shop::where('group_shop',$shopid)->pluck('id')->all();
-       
 
-          
+
+
             $wq = compact('modelid', 'lot_no');
             $drl_arr[$modelid][$lot_no][$shopid]['units'] = Unitmovement::where([['shop_id', '=', $shopid], ['current_shop', '=', 0]])->where('datetime_out',$start)->whereHas('vehicle',function ($query) use( $wq) {
              $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
   })->count();
-  
+
   $vehicle_array=Unitmovement::where([['shop_id', '=', $shopid], ['current_shop', '=', 0]])->where('datetime_out',$start)->whereHas('vehicle',function ($query) use( $wq) {
     $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
   })->pluck('vehicle_id')->all();
-  
+
        $drl_arr[$modelid][$lot_no][$shopid]['defects'] = Querydefect::whereIn('shop_id',$shop_array)->whereIn('vehicle_id',$vehicle_array)->where([['is_defect', '=', 'Yes']])->count();
-  
+
       // $plant_defect+= $drl_arr[$modelid][$lot_no][$shopid]['defects'];
 
 
-    
-         
-         
+
+
+
       }
-      
+
   }
 
 
 
 //dd( $vehicles);
-  
+
 
   $data = array(
-   // 'target'=>$target, 
-    'heading'=>$heading, 
+   // 'target'=>$target,
+    'heading'=>$heading,
     'shops'=>$shops,
     'vehicles'=>$vehicles,
     'drl_arr'=>$drl_arr,
@@ -194,20 +194,20 @@ class ProductionReportController extends Controller
     'period'=>encrypt_data($period),
     'date'=>encrypt_data($date),
     'plant_defect'=>$plant_defect,
-    
+
    // 'plant_units'=>$plant_units,
     //'plant_defect'=>$plant_defect,
     //'plant_target'=>$plant_target,
     //'pant_drl'=>$pant_drl,
     //'target_name'=>$target_name,
-    
+
     //'from'=>$from,
     //'to'=>$to,
    // 'target_id'=>$target_id,
     //'vehicle_models'=> $vehicle_models,
-  
-    
-    
+
+
+
 );
 
 
@@ -221,31 +221,31 @@ return view('productionreport.drl-month-todate')->with($data);
 
           $start=Carbon::createFromFormat('F Y', $date)->startOfMonth();
           $start=$start->format("Y-m-d");
-          
+
           $end=Carbon::createFromFormat('F Y', $date)->endOfMonth();
           $end=$end->format("Y-m-d");
 
-     
+
           $today=Carbon::now();
 
           $endtwo=$today->format("Y-m-d H:i:s");
 
-        
+
 
      /*$target = DrrTarget::where('target_type','Drr')->pluck('target_name', 'id');
-     
+
       $target_details = DrrTarget::where('active', 'Active')->where('target_type','Drr')->first();
-     
+
      $target_name = $target_details->target_name;*/
 
 
 
-               
-     
-     
+
+
+
      $heading='MTD DRL RESULTS FOR '.$date;
 
-     
+
      //Units Produced per month
 
      $vehicles = vehicle_units::groupBy('lot_no','model_id')->where('sheduled_month', $start)->get(['lot_no','model_id']);
@@ -254,7 +254,7 @@ return view('productionreport.drl-month-todate')->with($data);
 
 
      $drl_arr = [];
-        
+
      $unit_count = [];
       $i=1;
     $vehicleid = [];
@@ -280,10 +280,10 @@ $vehicle_array=Unitmovement::where([['shop_id', '=', $shopid], ['current_shop', 
      $drl_arr[$modelid][$lot_no][$shopid]['defects'] = Querydefect::whereIn('shop_id',$shop_array)->whereIn('vehicle_id',$vehicle_array)->where([['is_defect', '=', 'Yes']])->count();
 
      $plant_defect+=$drl_arr[$modelid][$lot_no][$shopid]['defects'] ;
-         
-         
+
+
       }
-      
+
   }
 
 
@@ -292,8 +292,8 @@ $vehicle_array=Unitmovement::where([['shop_id', '=', $shopid], ['current_shop', 
  // dd($drl_arr);
 
   $data = array(
-   // 'target'=>$target, 
-    'heading'=>$heading, 
+   // 'target'=>$target,
+    'heading'=>$heading,
     'shops'=>$shops,
     'vehicles'=>$vehicles,
     'shopcount'=>$shopcount,
@@ -303,20 +303,20 @@ $vehicle_array=Unitmovement::where([['shop_id', '=', $shopid], ['current_shop', 
     'period'=>encrypt_data($period),
     'date'=>encrypt_data($date),
     'plant_defect'=>$plant_defect,
-    
+
    // 'plant_units'=>$plant_units,
     //'plant_defect'=>$plant_defect,
     //'plant_target'=>$plant_target,
     //'pant_drl'=>$pant_drl,
     //'target_name'=>$target_name,
-    
+
     //'from'=>$from,
     //'to'=>$to,
    // 'target_id'=>$target_id,
     //'vehicle_models'=> $vehicle_models,
-  
-    
-    
+
+
+
 );
 
 
@@ -329,18 +329,18 @@ return view('productionreport.drl-month-todate')->with($data);
       }
 
 //end plant section
-      
 
 
 
 
-      //total Units ofllined 
+
+      //total Units ofllined
 
       //$vehicles = vehicle_units::groupBy('lot_no','model_id')->where('sheduled_month', $start)->get();
-    
+
      $startDate = Carbon::now(); //returns current day
-     $firstDay = $startDate->firstOfMonth(); 
-     $endDay = $startDate->endOfMonth(); 
+     $firstDay = $startDate->firstOfMonth();
+     $endDay = $startDate->endOfMonth();
      $start=$firstDay->format("Y-m-d");
      $end=$endDay->format("Y-m-d");
 
@@ -352,7 +352,7 @@ return view('productionreport.drl-month-todate')->with($data);
 
 
 
-  
+
 
 /*
 
@@ -363,7 +363,7 @@ return view('productionreport.drl-month-todate')->with($data);
             ->where('shop_id', 13);
   })->count();
 
-  
+
 
     $defects_array = Unitmovement::whereBetween('datetime_out',[$start,$end])->where('current_shop',0)->where('shop_id', 8)
     ->orWhere(function ($query) {
@@ -398,31 +398,31 @@ $master['drl']=$drl ;
 
 
 
-      
 
-      
-      
+
+
+
 
 
 
       if($section=='this_month'){
 
-     
 
 
 
 
 
 
-     
 
-     
-    
-     
+
+
+
+
+
 
 
      $drl_arr = [];
-        
+
      $unit_count = [];
       $i=1;
       $i=1;
@@ -450,10 +450,10 @@ $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
 })->count();
 
 
-         
-         
+
+
       }
-      
+
   }
 
 
@@ -470,8 +470,8 @@ $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
 
   $vehicle_models = vehicle_units::groupBy('lot_no','model_id')->where('sheduled_month','2022-01-01')->get();
   $data = array(
-    'target'=>$target, 
-    'heading'=>$heading, 
+    'target'=>$target,
+    'heading'=>$heading,
     'shops'=>$shops,
     'vehicles'=>$vehicles,
     'shopcount'=>$shopcount,
@@ -487,9 +487,9 @@ $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
     //'to'=>$to,
    // 'target_id'=>$target_id,
     'vehicle_models'=> $vehicle_models,
-  
-    
-    
+
+
+
 );
 
 
@@ -501,8 +501,8 @@ return view('productionreport.drl-month-todate')->with($data);
 
 
 
-    
-    
+
+
 //get units and group by lot and model number
       $current_shop=0;
       $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement',function ($query) use( $current_shop) {
@@ -517,14 +517,14 @@ return view('productionreport.drl-month-todate')->with($data);
 
 
 
-    
 
-      
+
+
 
       $vehicle_models = vehicle_units::groupBy('lot_no','model_id')->where('sheduled_month','2022-01-01')->get();
 
 
-  
+
        $target = DrrTarget::where('target_type','Drl')->pluck('target_name', 'id');
 
            $shops = Shop::where('check_point','=','1')->get();
@@ -536,13 +536,13 @@ $target_details = DrrTarget::where('active', 'Active')->where('target_type','Drl
 
 
 $target_name = $target_details->target_name;
-            
+
 
 
 $heading='MONTH TO DATE DIRECT RUN LOSS RESULTS FOR '.date('F Y');
 $today=Carbon::now();
 $startDate = Carbon::now(); //returns current day
-$firstDay = $startDate->firstOfMonth(); 
+$firstDay = $startDate->firstOfMonth();
 $end=$today->format("Y-m-d");
 $start=$firstDay->format("Y-m-d");
 
@@ -579,7 +579,7 @@ $starttwo=$firstDay->format("Y-m-d 00:00:00");
            $shopcount = Shop::where('check_point','=','1')->distinct()->count();
 
            $drr_arr = [];
-        
+
            $unit_count = [];
             $i=1;
             $i=1;
@@ -601,10 +601,10 @@ $starttwo=$firstDay->format("Y-m-d 00:00:00");
 })->count();
 
 
-               
-               
+
+
             }
-            
+
         }
 
 
@@ -628,7 +628,7 @@ $starttwo=$firstDay->format("Y-m-d 00:00:00");
 
              $unit_count[$shop_id]['targetscore']= DrrTargetShop::where([['shop_id', '=', $shop_id], ['target_id', '=', $target_details->id]])->value('target_value');
 
-               
+
             }
 
   $plant_units = Unitmovement::where([['current_shop', '=', 0]])->where('shop_id','8')->orWhere('shop_id','9')->orWhere('shop_id','13')->whereBetween('datetime_out',[$start,$end])->count();//change to offline shop
@@ -642,8 +642,8 @@ $pant_drl=round(($plant_defect/$plant_units),2);
 
 
       $data = array(
-            'target'=>$target, 
-            'heading'=>$heading, 
+            'target'=>$target,
+            'heading'=>$heading,
             'shops'=>$shops,
             'vehicles'=>$vehicles,
             'shopcount'=>$shopcount,
@@ -659,14 +659,14 @@ $pant_drl=round(($plant_defect/$plant_units),2);
             'to'=>$to,
             'target_id'=>$target_id,
             'vehicle_models'=> $vehicle_models,
-          
-            
-            
+
+
+
         );
 
 
        return view('productionreport.drl-month-todate')->with($data);
-        
+
  }elseif ($section=='daily') {
 
 
@@ -703,8 +703,8 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
            $drr_arr = [];
            $unit_count = [];
             $i=1;
-        
-          
+
+
                foreach($vehicles as $vehicle){
             $modelid = $vehicle->model_id;
             $lot_no = $vehicle->lot_no;
@@ -716,15 +716,15 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
 })->count();
 
 
-                 
+
                  $drr_arr[$modelid][$lot_no][$shopid]['defects'] = Querydefect::where([['shop_id', '=', $shopid], ['is_defect', '=', 'Yes']])->whereDate('created_at',$date)->whereHas('vehicle',function ($query) use( $wq) {
     $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
 })->count();
 
-               
-               
+
+
             }
-            
+
         }
 
      foreach($shops as $shoprow){
@@ -745,7 +745,7 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
 
              $unit_count[$shop_id]['targetscore']= DrrTargetShop::where([['shop_id', '=', $shop_id], ['target_id', '=', $target_details->id]])->value('target_value');
 
-               
+
             }
 
   $plant_units = Unitmovement::where([['current_shop', '=', 0],['datetime_out', '=',$date]])->where('shop_id','8')->orWhere('shop_id','9')->orWhere('shop_id','13')->count();
@@ -759,8 +759,8 @@ $pant_drl=round(($plant_defect/$plant_units),2);
 
 
       $data = array(
-            'target'=>$target, 
-            'heading'=>$heading, 
+            'target'=>$target,
+            'heading'=>$heading,
             'shops'=>$shops,
             'vehicles'=>$vehicles,
             'shopcount'=>$shopcount,
@@ -776,13 +776,13 @@ $pant_drl=round(($plant_defect/$plant_units),2);
             'to'=>$to,
             'target_id'=>$target_id,
             'vehicle_models'=> $vehicle_models,
-            
-            
+
+
         );
 
 
        return view('productionreport.drl-month-todate')->with($data);
-  
+
  }elseif ($section=='custom') {
 
 
@@ -796,7 +796,7 @@ $pant_drl=round(($plant_defect/$plant_units),2);
 
 
 
-                 
+
           $heading=' DIRECT RUN LOSS RESULTS FOR  '.date("D F Y", strtotime($start)).' TO '.date("D F Y", strtotime($end)).'';
           $startday=new Carbon($start);
           $endday = new Carbon($end);
@@ -818,11 +818,11 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
            $shopcount = Shop::where('check_point','=','1')->distinct()->count();
 
            $drr_arr = [];
-        
+
            $unit_count = [];
             $i=1;
-          
-          
+
+
                foreach($vehicles as $vehicle){
             $modelid = $vehicle->model_id;
             $lot_no = $vehicle->lot_no;
@@ -839,10 +839,10 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
 })->count();
 
 
-               
-               
+
+
             }
-            
+
         }
 
      foreach($shops as $shoprow){
@@ -863,7 +863,7 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
 
              $unit_count[$shop_id]['targetscore']= DrrTargetShop::where([['shop_id', '=', $shop_id], ['target_id', '=', $target_details->id]])->value('target_value');
 
-               
+
             }
 
   $plant_units = Unitmovement::where([['current_shop', '=', 0]])->where('shop_id','8')->orWhere('shop_id','9')->orWhere('shop_id','13')->whereBetween('datetime_out',[$start,$end])->count();
@@ -877,8 +877,8 @@ $pant_drl=round(($plant_defect/$plant_units),2);
 
 
       $data = array(
-            'target'=>$target, 
-            'heading'=>$heading, 
+            'target'=>$target,
+            'heading'=>$heading,
             'shops'=>$shops,
             'vehicles'=>$vehicles,
             'shopcount'=>$shopcount,
@@ -894,8 +894,8 @@ $pant_drl=round(($plant_defect/$plant_units),2);
             'to'=>$to,
             'target_id'=>$target_id,
             'vehicle_models'=> $vehicle_models,
-            
-            
+
+
         );
 
 
@@ -905,7 +905,7 @@ $pant_drl=round(($plant_defect/$plant_units),2);
 
 
  }
-        
+
     }
 
 
@@ -918,20 +918,20 @@ $pant_drl=round(($plant_defect/$plant_units),2);
 
       $date=decrypt_data($date);
       $section=decrypt_data($section);
-    
+
 //get units and group by lot and model number
       $current_shop=0;
       $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement',function ($query) use( $current_shop) {
                        $query->where('current_shop', $current_shop);
       })->get();
       $shops = Shop::where('check_point','=','1')->get();
-    
+
 
 
 
           //Palnt
 
-          
+
 
       if($section=='this_month'){
 
@@ -945,7 +945,7 @@ $target = DrrTarget::where('target_type','Drr')->pluck('target_name', 'id');
  $target_details = DrrTarget::where('active', 'Active')->where('target_type','Drr')->first();
 
 $target_name = $target_details->target_name;
-            
+
 
 
 $heading='MONTH TO DATE DIRECT RUN RATE RESULTS FOR '.$date;
@@ -970,11 +970,11 @@ $cv_vehicles = vehicle_units::where(function ($q) {
            $cv_shopcount = Shop::where('offline','=','1')->where('group_order','!=','0')->distinct()->count();
 
            $cv_drr_arr = [];
-        
-           $cv_unit_count = [];
-     
 
-        
+           $cv_unit_count = [];
+
+
+
           $cv_vehicleid = [];
           $cv_totalunits=[];
           $cv_allunits=[];
@@ -985,14 +985,14 @@ $cv_vehicles = vehicle_units::where(function ($q) {
                 $cv_shopid = $cv_shop->id;
 
                 $wq = compact('cv_modelid', 'cv_lot_no');
-               
+
                 $cv_datecheck='datetime_out';
                 $cv_all_shop_id= $cv_shopid;
 
                 if($cv_shopid ==28){
                   $cv_all_shop_id= 14;
                   $cv_datecheck= 'datetime_in';
-                 
+
 
                 }
 
@@ -1000,7 +1000,7 @@ $cv_vehicles = vehicle_units::where(function ($q) {
                   $query->where('model_id', $wq['cv_modelid'])->where('lot_no', $wq['cv_lot_no']);
  })->count();
 
- 
+
 
  $cv_mpa_pluck_units=Unitmovement::where([['shop_id', '=',  $cv_all_shop_id]])->whereBetween( $cv_datecheck,[$start,$end])->whereHas('vehicle',function ($query) use( $wq) {
   $query->where('model_id', $wq['cv_modelid'])->where('lot_no', $wq['cv_lot_no']);
@@ -1048,10 +1048,10 @@ if($cv_total_units >0){
 
 }
 
-      
-               
+
+
            }
-            
+
         }
 
 
@@ -1078,11 +1078,11 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
            $shopcount = Shop::where('offline','=','1')->where('group_order','!=','0')->distinct()->count();
 
            $drr_arr = [];
-        
-           $unit_count = [];
-     
 
-        
+           $unit_count = [];
+
+
+
           $vehicleid = [];
           $totalunits=[];
           $allunits=[];
@@ -1093,14 +1093,14 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
                 $shopid = $shop->id;
 
                 $wq = compact('modelid', 'lot_no');
-               
+
                 $datecheck='datetime_out';
                 $all_shop_id= $shopid;
 
                 if($shopid ==28){
                   $all_shop_id= 14;
                   $datecheck= 'datetime_in';
-                 
+
 
                 }
 
@@ -1108,7 +1108,7 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
                   $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
  })->count();
 
- 
+
 
  $mpa_pluck_units=Unitmovement::where([['shop_id', '=',  $all_shop_id]])->whereBetween( $datecheck,[$start,$end])->whereHas('vehicle',function ($query) use( $wq) {
   $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
@@ -1149,14 +1149,14 @@ if($total_units >0){
 
 }
 
-      
-               
+
+
            }
-            
+
         }
-       
-   
-        
+
+
+
  }elseif ($section=='this_year') {
 
   $start=Carbon::createFromFormat('Y', $date)->startOfYear();;
@@ -1169,7 +1169,7 @@ $target = DrrTarget::where('target_type','Drr')->pluck('target_name', 'id');
 $target_details = DrrTarget::where('active', 'Active')->where('target_type','Drr')->first();
 
 $target_name = $target_details->target_name;
-            
+
 
 
 $heading='MONTH TO DATE DIRECT RUN RATE RESULTS FOR '.$date;
@@ -1190,13 +1190,13 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
            $shopcount = Shop::where('offline','=','1')->where('group_order','!=','0')->distinct()->count();
 
            $drr_arr = [];
-        
+
            $unit_count = [];
           //  $i=1;
           //  $start='2021-10-01';
            // $stendart='2021-12-24';
 
-        
+
           $vehicleid = [];
           $totalunits=[];
           $allunits=[];
@@ -1207,14 +1207,14 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
                 $shopid = $shop->id;
 
                 $wq = compact('modelid', 'lot_no');
-               
+
                 $datecheck='datetime_out';
                 $all_shop_id= $shopid;
- //all vehicles going to DTC 
+ //all vehicles going to DTC
                 if($shopid ==28){
                   $all_shop_id= 14;
                   $datecheck= 'datetime_in';
-                 
+
 
                 }
 
@@ -1222,7 +1222,7 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
                   $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
  })->count();
 
- 
+
 
  $mpa_pluck_units=Unitmovement::where([['shop_id', '=',  $all_shop_id]])->whereBetween( $datecheck,[$start,$end])->whereHas('vehicle',function ($query) use( $wq) {
   $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
@@ -1263,10 +1263,10 @@ if($total_units >0){
 
 }
 
-      
-               
+
+
            }
-            
+
         }
 
 
@@ -1274,10 +1274,10 @@ if($total_units >0){
 
 
 
- 
 
 
-  
+
+
  }elseif ($section=='today') {
 
   $start=date_for_database($date);
@@ -1294,7 +1294,7 @@ $target = DrrTarget::where('target_type','Drr')->pluck('target_name', 'id');
 $target_details = DrrTarget::where('active', 'Active')->where('target_type','Drr')->first();
 
 $target_name = $target_details->target_name;
-            
+
 
 $heading=' DIRECT RUN RATE RESULTS FOR  '.$date;
 
@@ -1317,13 +1317,13 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
            $shopcount = Shop::where('offline','=','1')->where('group_order','!=','0')->distinct()->count();
 
            $drr_arr = [];
-        
+
            $unit_count = [];
           //  $i=1;
           //  $start='2021-10-01';
            // $stendart='2021-12-24';
 
-        
+
           $vehicleid = [];
           $totalunits=[];
           $allunits=[];
@@ -1334,14 +1334,14 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
                 $shopid = $shop->id;
 
                 $wq = compact('modelid', 'lot_no');
-               
+
                 $datecheck='datetime_out';
                 $all_shop_id= $shopid;
- //all vehicles going to DTC 
+ //all vehicles going to DTC
                 if($shopid ==28){
                   $all_shop_id= 14;
                   $datecheck= 'datetime_in';
-                 
+
 
                 }
 
@@ -1349,7 +1349,7 @@ $vehicles = vehicle_units::groupBy('lot_no','model_id')->whereHas('unitmovement'
                   $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
  })->count();
 
- 
+
 
  $mpa_pluck_units=Unitmovement::where([['shop_id', '=',  $all_shop_id]])->whereDate( $datecheck,$start)->whereHas('vehicle',function ($query) use( $wq) {
   $query->where('model_id', $wq['modelid'])->where('lot_no', $wq['lot_no']);
@@ -1390,10 +1390,10 @@ if($total_units >0){
 
 }
 
-      
-               
+
+
            }
-            
+
         }
 
 
@@ -1418,8 +1418,8 @@ if($total_units >0){
   'cv_totalunits'=>$cv_totalunits,
 
   //pant
-  'target'=>$target, 
-  'heading'=>$heading, 
+  'target'=>$target,
+  'heading'=>$heading,
   'shops'=>$shops,
   'vehicles'=>$vehicles,
   'shopcount'=>$shopcount,
@@ -1429,13 +1429,13 @@ if($total_units >0){
   'section'=>$section,
   'date'=>$date,
 
-  
-  
+
+
 );
 
 
  return view('productionreport.drr-month-todate')->with($data);
-        
+
     }
 
     public function filtertoday(Request $request)
@@ -1443,7 +1443,7 @@ if($total_units >0){
 
      // dd(date_for_database($request->from_date_single));
 
-      
+
 
       if($request->select_id==1){
       $date=encrypt_data($request->from_date_single);
@@ -1459,7 +1459,7 @@ if($total_units >0){
       $section=encrypt_data('custom');
 
       return redirect()->route('drl', ['section' => $section,'from'=>$fromdate,'to'=>$todate,'target_id'=>$target_id]);
-     
+
     }
 
   }
@@ -1467,9 +1467,9 @@ if($total_units >0){
     {
 
 
-     
-    
-     
+
+
+
       $date=encrypt_data($request->month_date);
       $record=encrypt_data($request->section);
       return redirect()->route('drr', ['date'=>$date, 'section'=>$record]);
@@ -1478,7 +1478,7 @@ if($total_units >0){
 
 
 
-   public function exportdrl($section,$from,$to,$target_id) 
+   public function exportdrl($section,$from,$to,$target_id)
     {
       $data = array();
       $data['section'] = $section;
@@ -1487,9 +1487,9 @@ if($total_units >0){
       $data['target_id'] = $target_id;
 
         return Excel::download(new DrlExport($data), ''.decrypt_data($section).'_DRL_Report.xlsx');
-    } 
+    }
 
-    public function exportdrr($section,$from,$to,$target_id) 
+    public function exportdrr($section,$from,$to,$target_id)
     {
       $data = array();
       $data['section'] = $section;
@@ -1499,18 +1499,18 @@ if($total_units >0){
 
       //dd($data);
         return Excel::download(new DrrExport($data), ''.decrypt_data($section).'_DRR_Report.xlsx');
-    } 
+    }
 
- public function defectsummary($from,$to) 
+ public function defectsummary($from,$to)
     {
 
-      
+
 
 $from=decrypt_data($from);
 $to=decrypt_data($to);
 
       if($from!='null' && $to!='null' ){
-  
+
 
          $originalDate = $from;
           $start=date_for_database($from);
@@ -1519,12 +1519,12 @@ $to=decrypt_data($to);
 
     $start_date = date('Y-m-d 00:00:00', strtotime($start));
 
-$end_date = date('Y-m-d 23:59:59', strtotime($end));     
+$end_date = date('Y-m-d 23:59:59', strtotime($end));
 
 
 
 
-    
+
 
 
          $heading='Month to Date  Defect Summary for '.date("D F Y", strtotime($start)).' TO '.date("D F Y", strtotime($end)).'';
@@ -1557,7 +1557,7 @@ $end_date = date('Y-m-d 23:59:59', strtotime($end));
 
 
 
-       
+
         $defects = Querydefect::with(['getqueryanswer.doneby','getqueryanswer.routing.category'])->whereBetween('created_at',[$start_date,$end_date])->get();
 
 
@@ -1568,7 +1568,7 @@ $end_date = date('Y-m-d 23:59:59', strtotime($end));
       }
 
 
-      
+
 
 $shops = Shop::where('check_point','=','1')->get();
 $shopdata=[];
@@ -1597,10 +1597,10 @@ $defectcategory=[];
 
              $data = array(
             'heading'=>$heading,
-            'defects'=>$defects, 
-            'shops'=>json_encode($shopdata), 
-            'defectcategory'=>json_encode($defectcategory), 
-           
+            'defects'=>$defects,
+            'shops'=>json_encode($shopdata),
+            'defectcategory'=>json_encode($defectcategory),
+
         );
 
 
@@ -1610,10 +1610,10 @@ $defectcategory=[];
 
 
 
-public function drrlist($date,$record) 
+public function drrlist($date,$record)
     {
 
-      
+
 
 $date=decrypt_data($date);
 $record=decrypt_data($record);
@@ -1636,7 +1636,7 @@ $start=$start->format("Y-m-d");
 $end=Carbon::createFromFormat('Y', $date)->endOfYear();
 $end=$end->format("Y-m-d");
 
-$heading='Year to Date  DRR List For '.$date; 
+$heading='Year to Date  DRR List For '.$date;
 
 
 }else if($record=='today'){
@@ -1653,7 +1653,7 @@ $date_dispaly=$date_dispaly->format("D F Y");
 
 
 
-$heading='Year to Date  DRR List For '.$date_dispaly; 
+$heading='Year to Date  DRR List For '.$date_dispaly;
 
 
 
@@ -1670,10 +1670,10 @@ $defects = Querydefect::with(['getqueryanswer.doneby','getqueryanswer.routing.ca
 
 
 
-     /*  
+     /*
       if (request()->ajax()) {
 
-        
+
 
         $defects = Drr::with(['vehicle.model','shop','doneby'])->whereBetween('created_at',[$start,$end])->get();
         if($record=='today'){
@@ -1714,12 +1714,12 @@ $defects = Querydefect::with(['getqueryanswer.doneby','getqueryanswer.routing.ca
 
 
  ->make(true);
-   
+
 
 }
 */
 
-      
+
 
 $shops = Shop::where('check_point','=','1')->get();
 $shopdata=[];
@@ -1756,12 +1756,12 @@ $defectcategory=[];
              $data = array(
             'heading'=>$heading,
             'record'=>$record,
-            'date'=>$date, 
-            'defects'=>$defects, 
-            'shops'=>json_encode($shopdata), 
-            'defectcategory'=>json_encode($defectcategory), 
-           
-           
+            'date'=>$date,
+            'defects'=>$defects,
+            'shops'=>json_encode($shopdata),
+            'defectcategory'=>json_encode($defectcategory),
+
+
         );
 
 
@@ -1769,7 +1769,7 @@ $defectcategory=[];
 
     }
 
-   
+
 
      public function updatedefect(Request $request, $id)
     {
@@ -1816,8 +1816,8 @@ $defectcategory=[];
 
     }
 
-    
-    
+
+
 
      public function filterdefect(Request $request)
     {
@@ -1826,8 +1826,8 @@ $defectcategory=[];
       $fromdate=encrypt_data($request->from_custom_date_single);
       $todate=encrypt_data($request->to_custom_date_single);
       return redirect()->route('defectsummary', ['from'=>$fromdate,'to'=>$todate]);
-     
-  
+
+
 
   }
 
@@ -1835,12 +1835,12 @@ $defectcategory=[];
     {
 
      // filter monthly difect
-     
+
       $date=encrypt_data($request->month_date);
       $record=encrypt_data($request->record);
       return redirect()->route('drrlist', ['from'=>$date,'to'=>$record]);
-     
-  
+
+
 
   }
 
@@ -1848,23 +1848,23 @@ $defectcategory=[];
 
   public function updatedrr(Request $request, $id)
   {
-    
+
     if($request->ajax()){
       $updatedata= Querydefect::find($request->input('pk'))->update([$request->input('name') => $request->input('value')]);
-       
+
 
 
 
 
             //book drr and if not booked
-            
-          
+
+
 if($updatedata){
 
   $units_details=Querydefect::find($request->input('pk'));
 
-  
-            
+
+
 
             if($request->input('name')=='mpb_drr'){
               $shop_id=15;
@@ -1881,7 +1881,7 @@ if($updatedata){
 
 
             }
-          
+
 
 
             $drrrecord=array();
@@ -1895,19 +1895,19 @@ if($updatedata){
                           $drrrecord['is_app_or_system']=1;
                           $drrrecord['done_by']=auth()->user()->id;
                           $drrsave = Drr::create($drrrecord);
-       
+
               }else{
               //existing but status changed
 
-              $v_update = Drr::where('vehicle_id',$units_details->vehicle_id); 
+              $v_update = Drr::where('vehicle_id',$units_details->vehicle_id);
               $v_update->update(['use_drr' => '1']);
 
 
               }
 
-       
 
-             
+
+
 
 
 
@@ -1915,24 +1915,24 @@ if($updatedata){
             }else{
 
 
-            $v_update = Drr::where('vehicle_id',$units_details->vehicle_id); 
+            $v_update = Drr::where('vehicle_id',$units_details->vehicle_id);
             $v_update->update(['use_drr' => '0']);
-        
+
 
 
 
 
             }
-  
+
 }
-          
-            
+
+
 
             return response()->json(['success' => true,'data'=>$request->input('name')]);
-     
+
     }
 
- 
+
 
 
 
@@ -1944,10 +1944,10 @@ if($updatedata){
         return  Drr::where('vehicle_id', $value)->where('shop_id',$value1)->exists();
     }
 
-  
 
-   
 
-  
+
+
+
 
 }

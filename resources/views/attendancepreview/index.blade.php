@@ -24,7 +24,7 @@
             <h3 class="text-themecolor mb-0 text-light" style="text-transform: uppercase;">{{$shop}}</h3>
             <ol class="breadcrumb mb-0 p-0 bg-transparent">
                 <li class="breadcrumb-item text-light"><a href="javascript:void(0)">Home</a></li>
-                <li class="breadcrumb-item active text-light">Attandance & OT Preview</li>
+                <li class="breadcrumb-item active text-light"><a href="{{route('bulkauth')}}">Attandance & OT Preview</a></li>
             </ol>
         </div>
 
@@ -34,7 +34,7 @@
 
                     <div class="d-flex ml-2">
                         <div class="text-right d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
-                            <a href="/attendancepreview" id="btn-add-contact" class="btn btn-info"><i class="mdi mdi-arrow-left font-16 mr-1"></i> Back</a>
+                            <a href="{{ url()->previous() }}" id="btn-add-contact" class="btn btn-info"><i class="mdi mdi-arrow-left font-16 mr-1"></i> Back</a>
                     </div>
                     </div>
                 </div>
@@ -111,20 +111,20 @@
                             </thead>
                             <tbody>
 
-                                @if ($staffs  != null)
-                                    @foreach ($staffs as $item)
+                                @if ($employees  != null)
+                                    @foreach ($employees as $item)
                                         <input type="hidden" name="num" value="{{$num++}}">
 
-                                        <input type="hidden" value="{{$item->staff_id}}" name="staff_id[]">
+                                        <input type="hidden" value="{{$item->id}}" name="staff_id[]">
 
                                         <tr>
-                                        <td>{{$item->employee->staff_no}}</td>
+                                        <td>{{$item->staff_no}}</td>
                                         <td>
-                                        @if($item->employee->team_leader == 'yes')
+                                        @if($item->team_leader == 'yes')
                                             <span style="color:#da251c;">
-                                                {{$item->employee->staff_name}} (TeamLeader)</span>
+                                                {{$item->staff_name}} (TeamLeader)</span>
                                         @else
-                                            {{$item->employee->staff_name}}
+                                            {{$item->staff_name}}
 
                                         @endif
                                         </td>
@@ -132,17 +132,17 @@
                                         <td>
                                         @if($indirectshop != '')
                                             <div class="input-group">
-                                                <input type="text" id="direct_{{$num}}" name="direct[]" value="{{$item->direct_hrs}}"
+                                                <input type="text" id="direct_{{$num}}" name="direct[]" value="{{$direct[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off" placeholder="Direct">
 
-                                                <input type="text" id="indirect_{{$num}}" name="indirect[]" value="{{$item->indirect_hrs}}"
+                                                <input type="text" id="indirect_{{$num}}" name="indirect[]" value="{{$indirect[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off"  placeholder="Indirect">
                                             </div>
                                         @else
                                                 <input type="hidden" id="direct_{{$num}}" name="direct[]" value="0"
                                                 class="form-control hrs" autocomplete="off" placeholder="Direct">
 
-                                                <input type="text" id="indirect_{{$num}}" name="indirect[]" value="{{$item->indirect_hrs}}"
+                                                <input type="text" id="indirect_{{$num}}" name="indirect[]" value="{{$indirect[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off"  placeholder="Indirect">
                                         @endif
                                         </td>
@@ -150,23 +150,23 @@
                                         <td>
                                         @if($indirectshop != '')
                                             <div class="input-group">
-                                                <input type="text" id="overtime_{{$num}}" name="overtime[]" value="{{$item->othours}}"
+                                                <input type="text" id="overtime_{{$num}}" name="overtime[]" value="{{$othrs[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off" placeholder="Direct" required>
 
-                                                <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$item->indirect_othours}}"
+                                                <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$indirOThrs[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off" placeholder="indirect" required>
                                             </div>
                                         @else
                                                 <input type="hidden" id="overtime_{{$num}}" name="overtime[]" value="0"
                                                 class="form-control hrs" autocomplete="off" placeholder="Direct" required>
 
-                                                <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$item->indirect_othours}}"
+                                                <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$indirOThrs[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off" placeholder="indirect" required>
                                         @endif
                                         </td>
                                         <td>
-                                            <input type="text" id="overtime_{{$num}}" name="overtime[]" value="{{$item->auth_othrs}}"
-                                            class="form-control hrs" autocomplete="off" placeholder="Direct" required>
+                                            <input type="text" id="authhrs_{{$num}}" name="auth_hrs[]" value="{{$authhours[$item->id]}}"
+                                            class="form-control hrs" autocomplete="off" placeholder="Auth Hrs" required>
                                         </td>
 
                                         @if ($shopid == 19 || $shopid == 20)
@@ -174,7 +174,7 @@
                                                 <input type="hidden" name="shoptoid[]" value="0">
                                                 <input type="hidden" name="loaned[]" value="0">
                                                 <textarea class="form-control" required placeholder="Work describe here..."
-                                                rows="2" cols="50"name="workdescription[]">{{($item->workdescription) ? $item->workdescription : "";}}</textarea>
+                                                rows="2" cols="50"name="workdescription[]">{{($desc[$item->id]) ? $desc[$item->id] : "";}}</textarea>
                                             </td>
                                         @else
 
@@ -183,9 +183,9 @@
                                             <div class="input-group-prepend">
                                             <input type="hidden" name="workdescription[]" value="0">
                                             <select class="form-control select2 interloanover" id="overshopto_{{$num}}" style="width: 100%;" name="overshoptoid[]">
-                                                @if ($item->otshop_loaned_to > 0)
-                                                    <option value="{{$item->otshop_loaned_to}}">
-                                                        {{ \App\Models\shop\Shop::where('id','=',$item->otshop_loaned_to)->value('report_name'); }}
+                                                @if ($otshopln[$item->id] > 0)
+                                                    <option value="{{$otshopln[$item->id]}}">
+                                                        {{ \App\Models\shop\Shop::where('id','=',$otshopln[$item->id])->value('report_name'); }}
                                                     </option>
                                                 @else
                                                     <option value="0">Recepient shop</option>
@@ -197,11 +197,11 @@
                                             </select>
                                             </div>
 
-                                            @if ($item->otshop_loaned_to > 0)
-                                                <input type="text" id="loanov_{{$num}}" name="loanov[]" value="{{$item->otloaned_hrs}}"
+                                            @if ($otshopln[$item->id] > 0)
+                                                <input type="text" id="loanov_{{$num}}" name="loanov[]" value="{{$otloanhrs[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off"  placeholder="Hours">
                                             @else
-                                                <input type="text" id="loanov_{{$num}}" readonly name="loanov[]" value="{{$item->otloaned_hrs}}"
+                                                <input type="text" id="loanov_{{$num}}" readonly name="loanov[]" value="{{$otloanhrs[$item->id]}}"
                                                 class="form-control hrs" autocomplete="off"  placeholder="Hours">
                                             @endif
                                         </div>
@@ -211,9 +211,9 @@
                                                     <div class="input-group-prepend">
                                                     <select class="form-control select2 interloandir" id="dirshopto_{{$num}}" name="dirshopto[]"
                                                     style="width: 100%;">
-                                                        @if ($item->shop_loaned_to > 0)
-                                                            <option value="{{$item->shop_loaned_to}}">
-                                                                {{ \App\Models\shop\Shop::where('id','=',$item->shop_loaned_to)->value('report_name'); }}
+                                                        @if ($shoploanto[$item->id] > 0)
+                                                            <option value="{{$shoploanto[$item->id]}}">
+                                                                {{ \App\Models\shop\Shop::where('id','=',$shoploanto[$item->id])->value('report_name'); }}
                                                             </option>
                                                         @else
                                                             <option value="0">Choose shop...</option>
@@ -224,8 +224,8 @@
                                                         @endforeach
                                                     </select>
                                                     </div>
-                                                    @if ($item->shop_loaned_to > 0)
-                                                        <input type="text" autocomplete="off" name="loandir[]" id="loandir_{{$num}}" class="form-control hrs" value="{{$item->loaned_hrs}}">
+                                                    @if ($shoploanto[$item->id] > 0)
+                                                        <input type="text" autocomplete="off" name="loandir[]" id="loandir_{{$num}}" class="form-control hrs" value="{{$loanhrs[$item->id]}}">
                                                     @else
                                                         <input type="text" readonly autocomplete="off" name="loandir[]" id="loandir_{{$num}}" class="form-control hrs" placeholder="Hours...">
                                                     @endif
@@ -239,12 +239,11 @@
                                             <input type="text" id="disrupt_" name="disrupt[]" value=""
                                                  class="form-control hrs" autocomplete="off"  placeholder="Hours">
                                         </td>-->
-                                        <td><span  id="total{{$num}}">{{$item->direct_hrs + $item->indirect_hrs + $item->loaned_hrs}}</span> Hrs</td>
+                                        <td><span  id="total{{$num}}">{{$sumHrs[$item->id]}}</span> Hrs</td>
 
                                     </tr>
                                     @endforeach
                                 @endif
-
 
                             </tbody>
                             <tfoot>

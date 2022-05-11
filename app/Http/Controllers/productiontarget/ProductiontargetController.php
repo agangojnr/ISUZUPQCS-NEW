@@ -145,9 +145,27 @@ class ProductiontargetController extends Controller
 
     public function store(Request $request){
         $schlevel = $request->input('schedule');
-        $unitsedited = $request->unitsedited;
-        $dateid = $request->dateid;
-        $routeid = $request->routeid;
+        if($schlevel == 'entire'){
+            $scheduledata = $request->unitdata;
+            for($n = 0; $n <count($scheduledata); $n++){
+                $dataarr = explode('_',$scheduledata[$n]);
+                if($dataarr[2] != '--'){
+                    $dates[] = $dataarr[0];
+                    $routes[] = $dataarr[1];
+                    $noofunits[] = $dataarr[2];
+                }
+            }
+            $unitsedited = $noofunits;
+            $dateid = $dates;
+            $routeid = $routes;
+
+        }else{
+            $unitsedited = $request->unitsedited;
+            $dateid = $request->dateid;
+            $routeid = $request->routeid;
+        }
+
+
         $issuearr = explode(' ',$request->issueinput);
         $issueno = $issuearr[1];
         $comment = $request->comment;
@@ -157,7 +175,7 @@ class ProductiontargetController extends Controller
         function calc_inday($offdate,$shop,$schlevel){
             $allschdates = Production_target::where('schedule_part','entire')->groupby('date')->orderBy('date', 'ASC')->get(['date']);
             if($schlevel == "entire"){
-                $shopoffdays = [1=>4,2=>3,3=>2,5=>1,6=>1,8=>0,10=>0,11=>1,12=>0,13=>0,16=>0];
+                $shopoffdays = [1=>4,2=>3,3=>2,5=>1,6=>1,8=>0,10=>0,11=>0,12=>0,13=>0,16=>0];
             }elseif($schlevel == "up"){
                 $shopoffdays = [1=>3,2=>2,3=>1,5=>0,6=>0,11=>0];
             }elseif($schlevel == "down"){
@@ -200,7 +218,7 @@ class ProductiontargetController extends Controller
             $inshopdate = $offdate;
         }
             return $inshopdate;
-        }
+    }
 
         //return Production_target::groupby('date')->get(['date','route_id'])->sortDesc();
     try{

@@ -59,7 +59,7 @@
                                     <th>Detpartment</th>
                                     <th>Category</th>
                                     <th>Shop</th>
-                                    <th>Team Leader</th>
+                                    <th>Attachee</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                     <th>Edit/Delete</th>
@@ -71,18 +71,16 @@
                                 <tr>
                                     <td>{{$loop->iteration}}.</td>
                                     <td>{{$item->staff_no}}</td>
-                                    <td>{{$item->staff_name}}</td>
+                                    <td>@if ($item->team_leader  == 'yes')
+                                        {{$item->staff_name}} <span class="text-danger">(T/L)</span>
+                                    @else
+                                        {{$item->staff_name}}
+                                    @endif
+                                    </td>
                                     <td>{{$item->Department_Description}}</td>
                                     <td>{{$item->Category}}</td>
                                     <td>{{$item->shop->report_name}}</td>
-
-                                    <td>
-                                        @if ($item->team_leader == 'yes')
-                                            {{'Team Leader'}}
-                                        @else
-                                            {{''}}
-                                        @endif
-                                        </td>
+                                    <td>{{$item->attachee }} </td>
 
                                     <td>
                                         @if ($item->status == 'Active')

@@ -48,7 +48,7 @@
     <div class="container-fluid">
   <div class="content-header row pb-1">
                 <div class="content-header-left col-md-6 col-12 mb-2">
-                   
+
 
                 </div>
                 <div class="content-header-right col-md-6 col-12">
@@ -72,28 +72,28 @@
                      {{ Form::open(['route' => ['floatsetting.update',$floatsetting->id], 'class' => 'form-material mt-4', 'role' => 'form', 'method' => 'PUT', 'id' => 'create-float'])}}
 
 
-                
+
                 <div class="card-body">
 
 
              <div class="form-group row">
                         <label for="pname" class="col-sm-3 text-right control-label col-form-label">Float Type</label>
                         <div class="col-sm-9">
-                            
+
 
                             {!! Form::select('float_type', ['repair'=>'Repair','system'=>'System'],  $floatsetting->float_type, ['placeholder' => 'Float Type Shop','required'=>'required', 'class' => 'form-control custom-select ']); !!}
 
 
                         </div>
-                    </div>                      
+                    </div>
                      <div class="form-group row">
                         <label for="ename" class="col-sm-3 text-right control-label col-form-label"> Float Name</label>
                         <div class="col-sm-9">
-                             {{ Form::text('float_name', $floatsetting->float_name, ['class' => 'form-control', 'placeholder' => 'Float  Name','required'=>'required','autocomplete'=>'off']) }}    
+                             {{ Form::text('float_name', $floatsetting->float_name, ['class' => 'form-control', 'placeholder' => 'Float  Name','required'=>'required','autocomplete'=>'off']) }}
                         </div>
                     </div>
-               
-                 
+
+
 
             <hr>
                 <div class="card-body">
@@ -119,8 +119,8 @@
 @section('after-styles')
     {{ Html::style('assets/extra-libs/toastr/dist/build/toastr.min.css') }}
 
-    
-    
+
+
 @endsection
 
 
@@ -130,7 +130,7 @@
 {{ Html::script('assets/extra-libs/toastr/dist/build/toastr.min.js') }}
 {{ Html::script('assets/extra-libs/toastr/toastr-init.js') }}
 
-    
+
 
 <script type="text/javascript">
      $(document).on('submit', 'form#create-float', function(e){

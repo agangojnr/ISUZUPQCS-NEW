@@ -37,11 +37,10 @@
                                     </div>
                                 </div>
                                 <div class="col-4">
-                                    <h4 class="card-title">Choose Month:</h4>
-                                    <div class='input-group'>
-                                        <input type="text" name="mdate" id="datepicker" class="form-control bg-white" readonly
+                                    <label>Filter by Month:</label>
+                                    <div class="input-group">
+                                        <input type="text" name="mdate" class="form-control form-control-1 input-sm from bg-white" readonly
                                         value="{{\Carbon\Carbon::createFromFormat('Y-m-d', $today)->format('F Y')}}" autocomplete="off" />
-
                                         <div class="input-group-append">
                                             <span class="input-group-text">
                                                 <span class="ti-calendar"></span>
@@ -51,7 +50,7 @@
 
                             </div>
                             <div class="col-4">
-                                <button type="submit" class="btn btn-success mt-4">Filter Hours</button>
+                                <button type="submit" class="btn btn-success mt-4"><i class="mdi mdi-filter"></i> Filter Data</button>
                             </div>
 
                             </div>
@@ -132,15 +131,10 @@
         $(".select2").select2();
     </script>
     <script>
-        $(function(){
-        var today = new Date();
-        $("#datepicker").datepicker({
-            showDropdowns: true,
+        $('.from').datepicker({
+            autoclose: true,
+            minViewMode: 1,
             format: "MM yyyy",
-            viewMode: "years",
-            minViewMode: "months",
-            maxDate: today,
-            });
         });
     </script>
     {!! Toastr::message() !!}

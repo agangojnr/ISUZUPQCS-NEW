@@ -4,9 +4,6 @@ namespace App\Models\employee;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\stafftitle\StaffTitle;
-use App\Models\department\Department;
-use App\Models\division\Division;
 use App\Models\shop\Shop;
 use App\Models\attendance\Attendance;
 use App\Models\employeecategory\EmployeeCategory;
@@ -18,24 +15,15 @@ class Employee extends Model
     protected $table = 'employees';
     protected $fillable = ['unique_no','staff_no','staff_name','Department_Description','Category','Role','shop_id','team_leader','user_id'];
 
-    public function stafftitle(){
-        return $this->belongsTo(StaffTitle::class, 'title_id');
-    }
-
-    public function division(){
-        return $this->belongsTo(Division::class, 'division_id');
-    }
-
-    public function department(){
-        return $this->belongsTo(Department::class, 'department_id');
-    }
-
     public function shop(){
         return $this->belongsTo(Shop::class, 'shop_id');
     }
-    public function empcategory(){
-        return $this->belongsTo(EmployeeCategory::class, 'empcategory_id');
+
+    public function empattendance(){
+        return $this->hasMany(Attendance::class, 'staff_id');
     }
+
+
 
 
 

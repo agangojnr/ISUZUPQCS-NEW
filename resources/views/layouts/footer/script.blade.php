@@ -16,7 +16,7 @@
     <!--Custom JavaScript -->
     <script src="{{ asset('dist/js/custom.min.js') }}"></script>
     <!--This page JavaScript -->
-  
+
 
     <!--Wave Effects -->
     <script src="{{ asset('dist/js/waves.js') }}"></script>
@@ -38,7 +38,7 @@
     <script src="{{ asset('assets/libs/pickadate/lib/compressed/legacy.js') }}"></script>
     <script src="{{ asset('assets/libs/moment/moment.js') }}"></script>
     <script src="{{ asset('assets/libs/daterangepicker/daterangepicker.js') }}"></script>
- 
+
 
     <script src="{{ asset('js/customjs/isuzucustom.js') }}"></script>
 

@@ -284,6 +284,38 @@
                             [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'del-units']); !!}
                         <label for="del-units">Delayed Units</label>
                     </div>
+                    <div class="mb-2">
+                        {!! Form::checkbox('permissions[]', 'pos-track', false,
+                            [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'pos-track']); !!}
+                        <label for="pos-track">Position Track</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <div class="col-3">
+            <h5 class="ml-3">Summary Graphs:</h5>
+        <div class="col-lg-12">
+            <div class="card border-left border-right border-info">
+
+                <div class="card-body">
+
+                    <div class="mb-2">
+                        {!! Form::checkbox('permissions[]', 'response-summary', false,
+                            [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'responsesum']); !!}
+                        <label for="responsesum">Responsiveness</label>
+                    </div>
+                    <div class="mb-2">
+                        {!! Form::checkbox('permissions[]', 'people-summary', false,
+                            [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'peoplesum']); !!}
+                        <label for="peoplesum">People</label>
+                    </div>
+                    <div class="mb-2">
+                        {!! Form::checkbox('permissions[]', 'quality-summary', false,
+                            [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'qualitysum']); !!}
+                        <label for="qualitysum">Quality</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -334,6 +366,11 @@
                         {!! Form::checkbox('permissions[]', 'routing-bymodel', false,
                             [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'routingbm']); !!}
                         <label for="routingbm">Rt by Model</label>
+                    </div>
+                    <div class="mb-2">
+                        {!! Form::checkbox('permissions[]', 'sort-routing', false,
+                            [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'srtroute']); !!}
+                        <label for="srtroute">Sort Routing</label>
                     </div>
                 </div>
             </div>
@@ -520,7 +557,11 @@
                         [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'overtime3']); !!}
                     <label for="overtime3">OT Reports </label>
                 </div>
-
+                <div class="mb-2">
+                    {!! Form::checkbox('permissions[]', 'bulk-auth', false,
+                        [ 'class' => 'material-inputs chk-col-cyan', 'id'=>'bulkauth']); !!}
+                    <label for="bulkauth">Bulk Auth'n</label>
+                </div>
             </div>
         </div>
     </div>

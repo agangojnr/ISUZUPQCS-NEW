@@ -48,7 +48,7 @@
     <div class="container-fluid">
   <div class="content-header row pb-1">
                 <div class="content-header-left col-md-6 col-12 mb-2">
-                   
+
 
                 </div>
                 <div class="content-header-right col-md-6 col-12">
@@ -72,7 +72,7 @@
                      {{ Form::open(['route' => 'appusers.store', 'class' => 'form-horizontal', 'role' => 'form', 'method' => 'post', 'id' => 'create-user'])}}
 
 
-                
+
                 <div class="card-body">
 
 
@@ -102,8 +102,8 @@
 @section('after-styles')
     {{ Html::style('assets/extra-libs/toastr/dist/build/toastr.min.css') }}
 
-    
-    
+
+
 @endsection
 
 
@@ -113,7 +113,7 @@
 {{ Html::script('assets/extra-libs/toastr/dist/build/toastr.min.js') }}
 {{ Html::script('assets/extra-libs/toastr/toastr-init.js') }}
 
-    
+
 
 <script type="text/javascript">
      $(document).on('submit', 'form#create-user', function(e){
@@ -125,7 +125,7 @@
                 url: $(this).attr("action"),
                 dataType: "json",
                 data: data,
-                success:function(result){
+                success:function(result){ alert(result);
                     if(result.success == true){
                         //$('div.account_model').modal('hide');
                         toastr.success(result.msg);

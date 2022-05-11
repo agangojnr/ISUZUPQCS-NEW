@@ -58,6 +58,16 @@
                         </div>
 
                     </div>
+                    <div class="form-group row">
+                        <label for="description" class="col-sm-3 text-right control-label col-form-label">Is Attachee.:</label>
+                        <div class="col-sm-9">
+                            <input name="attachee" value="yes" type="radio"  id="radio5" class="with-gap material-inputs radio-col-pink" />
+                            <label for="radio5">Yes</label>
+
+                            <input name="attachee" value="no" type="radio" id="radio6" checked class="with-gap material-inputs radio-col-orange" />
+                            <label for="radio6">No</label>
+                        </div>
+                    </div>
 
                 <hr>
                 <div class="card-body">

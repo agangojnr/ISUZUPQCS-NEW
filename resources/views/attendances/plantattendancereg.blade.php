@@ -10,6 +10,7 @@
     @yield('after-styles')
 
     {{ Html::style('assets/libs/select2/dist/css/select2.min.css') }}
+    <link href="{{asset('assets/libs/bootstrap/dist/css/bootstrap.min.css')}}" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="{{asset('assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css')}}">
 
 </head>
@@ -20,7 +21,7 @@
     <!-- ============================================================== -->
    <div class="row page-titles" style="background-color:#da251c;">
         <div class="col-md-5 col-12 align-self-center">
-            <h3 class="text-white mb-0">MONTHLY ATTENDANCE HOURS REPORT PER SHOP</h3>
+            <h5 class="text-white mb-0">MONTHLY ATTENDANCE HOURS REPORT PER SHOP</h5>
             <ol class="breadcrumb mb-0 p-0 bg-transparent">
                 <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
                 <li class="breadcrumb-item active text-white">REPORTS</li>
@@ -56,8 +57,8 @@
                         <div class="col-6">
                             <ol class="breadcrumb mb-2  bg-grey">
                                 <li class="breadcrumb-item">
-                                    <h3 class="card-title"><u>PLANT MONTHLY ATTENDANCE REGISTER
-                                        ({{\Carbon\Carbon::createFromFormat('Y-m-d', $today)->format('M Y')}})</u></h3>
+                                    <h5 class="card-title"><u>PLANT MONTHLY ATTENDANCE REGISTER
+                                        ({{\Carbon\Carbon::createFromFormat('Y-m-d', $today)->format('M Y')}})</u></h5>
                                 </li>
                             </ol>
 
@@ -67,21 +68,20 @@
                             'method'=>'post', 'enctype' => 'multipart/form-data']); !!}
                             <div class="row">
                                 <div class="col-7">
-                                    <h4 class="card-title">Filter HC by Date</h4>
-                                <div class='input-group'>
-                                    <input type="text" name="mdate" id="datepicker" class="form-control bg-white" readonly
-                                    value="{{\Carbon\Carbon::createFromFormat('Y-m-d', $today)->format('F Y')}}" autocomplete="off" />
-
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">
-                                            <span class="ti-calendar"></span>
-                                        </span>
+                                    <label>Filter by Month:</label>
+                                    <div class="input-group">
+                                        <input type="text" required name="mdate" class="form-control form-control-1 input-sm from bg-white" readonly
+                                        value="{{\Carbon\Carbon::createFromFormat('Y-m-d', $today)->format('F Y')}}" autocomplete="off" />
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">
+                                                <span class="ti-calendar"></span>
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
 
                             </div>
                             <div class="col-5">
-                                <button type="submit" class="btn btn-success mt-4">Filter Hours</button>
+                                <button type="submit" class="btn btn-success mt-4"><i class="mdi mdi-filter"></i> Filter Data</button>
                             </div>
 
                             </div>
@@ -109,11 +109,17 @@
                                 <tr>
                                     <td>{{$shop->report_name}}</td>
                                     @for ($i = 0; $i < $count; $i++)
-                                        <td>@if($marked[$shop->id][$i] == 1)
-                                            <span class="text-success">&#10003;</span>
-
+                                        <td>
+                                            @if($marked[$shop->id][$i] == 1)
+                                                <span class="text-success">&#10003;</span>
+                                                <span class="text-dark">|</span>
+                                                @if ($approval[$shop->id][$i] == 1)
+                                                    <span class="text-success">&#10003;</span>
+                                                @else
+                                                    <span class="text-danger"><i>&#x2715;</i></span>
+                                                @endif
                                             @else
-                                            <span class="text-danger"><i>&#x2715;</i></span>
+                                                <span class="text-danger"><i>&#x2715;</i></span>
                                             @endif</td>
                                     @endfor
                                     <td>{{$shop->report_name}}</td>
@@ -146,16 +152,12 @@
     {{ Html::script('assets/extra-libs/toastr/toastr-init.js') }}
     {{ Html::script('assets/libs/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}
 
+
     <script>
-        $(function(){
-        var today = new Date();
-        $("#datepicker").datepicker({
-            showDropdowns: true,
+        $('.from').datepicker({
+            autoclose: true,
+            minViewMode: 1,
             format: "MM yyyy",
-            viewMode: "years",
-            minViewMode: "months",
-            maxDate: today,
-            });
         });
     </script>
     {!! Toastr::message() !!}

@@ -209,22 +209,6 @@ class AttendanceController extends Controller
 
         }
 
-//INSERTING STATUS
-/*$attends =Attendance::groupBy('date')->groupBy('shop_id')->get(['date','shop_id']);
-foreach($attends as $attend){
-    $check = Attendance_status::where([['date','=',$attend->date],['shop_id','=',$attend->shop_id]])->first();
-    if(empty($check)){
-        $stat = new Attendance_status;
-        $stat->shop_id = $attend->shop_id;
-        $stat->date = $attend->date;
-        $stat->status_name = 'approved';
-        $stat->workdescription = 'Work description...';
-        $stat->user_id = auth()->user()->id;
-
-        $stat->save();
-    }
-}*/
-
       $proddayys = Production_target::groupBy('date')->whereBetween('date',['2021-11-16',Carbon::today()->format('Y-m-d')])->get('date');
         $unlogged = []; $saveds = []; $reviews = [];
         foreach($proddayys as $dayy){
@@ -233,15 +217,22 @@ foreach($attends as $attend){
                 $unlogged[] = Carbon::createFromFormat('Y-m-d', $dayy->date)->format('d M Y');
             }
 
-            $saved = Attendance_status::where([['date','=',$dayy->date],['shop_id','=',Auth()->User()->section]])->value('status_name');
+        }
+        $startdate = "2021-11-16";
+        $tody = Carbon::today()->format('Y-m-d');
+        $startdate1 = $startdate;
+        while($startdate1 <= $tody){
+            $saved = Attendance_status::where([['date','=',$startdate1],['shop_id','=',Auth()->User()->section]])->value('status_name');
             if($saved == "saved"){
-                $saveds[] = Carbon::createFromFormat('Y-m-d', $dayy->date)->format('d M Y');
+                $saveds[] = Carbon::createFromFormat('Y-m-d', $startdate1)->format('d M Y');
             }
 
-            $review = Attendance_status::where([['date','=',$dayy->date],['shop_id','=',Auth()->User()->section]])->value('status_name');
+            $review = Attendance_status::where([['date','=',$startdate1],['shop_id','=',Auth()->User()->section]])->value('status_name');
             if($review == "review"){
-                $reviews[] = Carbon::createFromFormat('Y-m-d', $dayy->date)->format('d M Y');
+                $reviews[] = Carbon::createFromFormat('Y-m-d', $startdate1)->format('d M Y');
             }
+
+            $startdate1 = Carbon::parse($startdate1)->addDays(1)->format('Y-m-d');
         }
 
         //return $count_presenttoday;
@@ -342,7 +333,8 @@ foreach($attends as $attend){
 
                         $attend->otshop_loaned_to = ($overshopto[$i] == null)? 0 : $overshopto[$i];
 
-                        $attend->efficiencyhrs = (($direct_hrs+$indirect_hrs) * 0.97875) + $othours + $indothours;
+                        //$attend->efficiencyhrs = (($direct_hrs+$indirect_hrs) * 0.97875) + $othours + $indothours;
+                        $attend->efficiencyhrs = (($direct_hrs) * 0.97875) + $othours;
                         $attend->user_id = auth()->user()->id;
 
                        $attend->save();
@@ -804,7 +796,7 @@ public function headcount(Request $request){
         }
 
         //EFFPLANT MTD
-        $ppmtddrhrs = 0; $ppmtdlnhrs = 0; $ppmtdotlnhrs = 0;
+        /*$ppmtddrhrs = 0; $ppmtdlnhrs = 0; $ppmtdotlnhrs = 0;
         foreach($shops as $shop){
             $ppmtddrhrs += Attendance::whereBetween('date', [$datefrom, $dateto])->where('shop_id',$shop->id)->sum(DB::raw('efficiencyhrs'));
             $ppmtdlnhrs += Attendance::whereBetween('date', [$datefrom, $dateto])->where('shop_loaned_to',$shop->id)->sum(DB::raw('loaned_hrs'));
@@ -813,8 +805,10 @@ public function headcount(Request $request){
         $ppMTDinput = $ppmtddrhrs + $ppmtdlnhrs + $ppmtdotlnhrs;
         $ppMTDoutput = Unitmovement::whereBetween('datetime_out', [$datefrom, $dateto])->sum('std_hrs');
         $pplcvfinal = Unitmovement::whereBetween('datetime_out', [$datefrom, $dateto])->where('shop_id',13)->sum('std_hrs');
-        $ppMTDoutput -= $pplcvfinal;
-        $ppMTDplant_eff = ($ppMTDinput > 0) ? round(($ppMTDoutput/$ppMTDinput)*100,2) : 0;
+        $ppMTDoutput -= $pplcvfinal;*/
+
+
+        $ppMTDplant_eff = getPlantEfficiency($datefrom, $dateto);//($ppMTDinput > 0) ? round(($ppMTDoutput/$ppMTDinput)*100,2) : 0;
 
         $range = Carbon::createFromFormat('Y-m-d', $datefrom)->format('jS M Y').' To '.Carbon::createFromFormat('Y-m-d', $dateto)->format('jS M Y');
         //return $shopmodelhrs;
@@ -924,12 +918,12 @@ public function headcount(Request $request){
             $activetag = $request->input('rangeid');
             $date = $request->input('mdate');
         }else{
-            $activetag = IndivTarget::max('id');
+            $start = carbon::now()->startOfMonth()->format('Y-m-d');
+            $end = carbon::now()->endOfMonth()->format('Y-m-d');
+            //$activetag = IndivTarget::whereBetween('month',[$start,$end])->first();
         }
 
         $shops = Shop::where('check_shop','=',1)->get(['id','report_name']);
-        unset($shops[9]);
-
 
         $today = Carbon::today()->format('Y-m-d');
 
@@ -982,12 +976,9 @@ public function headcount(Request $request){
 
     }
 
-
-        $eff_abTargets = getTarget($today);
-
         $data = array(
-            'abT'=>getTarget($today)->absentieesm,
-            'effT'=>getTarget($today)->efficiency,
+            'abT'=>(getTarget($today) == 0) ? 0: getTarget($today)->absentieesm,
+            'effT'=>(getTarget($today) == 0) ? 0: getTarget($today)->efficiency,
             'shopsTLtarget'=>$shopsTLtarget, 'shops'=>$shops,
             'shop_eff'=>$shop_eff,
             'absentiesm'=>$absentiesm,
@@ -996,8 +987,7 @@ public function headcount(Request $request){
         );
         return view('attendances.peopleAttreport')->with($data);
     }
-	
-	
+
     public function settargets(request $request){
 
         $targets =  IndivTarget::All();
@@ -1010,21 +1000,17 @@ public function headcount(Request $request){
     }
 
     public function createtargets(){
-        //return getTarget("2022-01-02")->efficiency;
         $shops = Shop::where('check_shop','=','1')->get(['id','report_name']);
-        $year = Carbon::today()->format('Y');
-        $years = [$year-1,$year,$year+1];
-        $quarters = ['First Quarter','Second Quarter','Third Quarter','Fourth Quarter'];
+        $startofyr = Carbon::now()->startOfYear()->format('Y-m-d');
+        $endofyr = Carbon::now()->endOfYear()->format('Y-m-d');
 
-        $year = Carbon::today()->format('Y');
-        $thisyeartargets =  IndivTarget::where('year',$year)->get();
+        $selectedmonth = Carbon::parse()->format('F Y');
+        $thisyeartargets =  IndivTarget::whereBetween('month',[$startofyr,$endofyr])->get();
 
         $data = array(
             'shops'=>$shops,
-            'years'=>$years,
-            'quarters'=>$quarters,
+            'selectedmonth'=>$selectedmonth,
 
-            'year'=>$year,
             'thisyeartargets'=>$thisyeartargets,
         );
         return view('attendances.createtargets')->with($data);
@@ -1033,7 +1019,7 @@ public function headcount(Request $request){
     public function savetargets(Request $request){
 
         $validator = Validator::make($request->all(), [
-            'yearquarter' => 'required',
+            'month' => 'required',
             'pefficiency' => 'required',
             'pabsentieesm' => 'required',
             'ptlavailability' => 'required',
@@ -1045,30 +1031,21 @@ public function headcount(Request $request){
             return back();
         }
 
-        $yearquarter = $request->input('yearquarter');
-         $dataarr = explode('-',$yearquarter);
-         $year = $dataarr[0];
-         $qtno = $dataarr[1];
-
+        $month = Carbon::createFromFormat('F Y',$request->input('month'))->format('Y-m-d');
         $efficiency = $request->input('efficiency');
         $absentieesm = $request->input('absentieesm');
         $tlavailability = 0;//$request->input('tlavailability');
 
-        $quarts = [1=>'1st Quarter',2=>'2nd Quarter',3=>'3rd Quarter',4=>'4th Quarter'];
-
-        $quarter = $quarts[$qtno];
 
         try{
             DB::beginTransaction();
 
-            $tgt = IndivTarget::where([['yearquarter',$quarter],['year',$year]])->first();
+            $tgt = IndivTarget::where('month',$month)->first();
             if(!isset($tgt)){
                 $tgt = new IndivTarget;
             }
 
-
-            $tgt->year = $year;
-            $tgt->yearquarter = $quarter;
+            $tgt->month = $month;
             $tgt->efficiency = $request->input('pefficiency');
             $tgt->absentieesm = $request->input('pabsentieesm');
             $tgt->tlavailability = $request->input('ptlavailability');
@@ -1231,14 +1208,21 @@ public function plantattendancereg(Request $request){
 
                 $mked = Attendance::where([['date', '=', $schdates[$n]], ['shop_id', '=',$sp->id]])->first();
                 $marked[$sp->id][] = (!empty($mked)) ? 1 : 0;
+                if(!empty($mked)){
+                    $status = Attendance_status::where([['date', $schdates[$n]], ['shop_id',$sp->id]])->value('status_name');
+                    $approval[$sp->id][] = ($status == 'approved') ? 1 : 0;
+                }else{
+                    $approval[$sp->id][] = 0;
+                }
         }
     }
 
+    //return $approval;
     $data = array(
         'today'=>$today,
         'dates'=>$dates,
         'count'=>count($schdates),
-        'marked'=>$marked,
+        'marked'=>$marked, 'approval'=>$approval,
         'shops'=>$shops,
     );
     return view('attendances.plantattendancereg')->with($data);

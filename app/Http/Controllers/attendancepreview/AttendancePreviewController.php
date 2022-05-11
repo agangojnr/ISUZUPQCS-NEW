@@ -98,8 +98,6 @@ class AttendancePreviewController extends Controller
             'count_presentyesterday'=>$count_presentyesterday,
             'confirmedtoday'=>$confirmedtoday,
             'confirmedyesterday'=>$confirmedyesterday,
-
-
         );
        return view('attendancepreview.attendance_view')->with($data);
     }
@@ -109,10 +107,16 @@ class AttendancePreviewController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function checkattendance(Request $request)
-    {
+    public function checkattendance($id){
+        if(isset($id)){
+            $status = Attendance_status::where('id',$id)->first();
+            $mdate =Carbon::createFromFormat('Y-m-d', $status->date)->format('m/d/Y');
+            $shopid = $status->shop_id;
+        }else{
             $mdate =$request->input('mdate');
             $shopid = $request->input('shop');
+        }
+
         $date = Carbon::createFromFormat('m/d/Y', $mdate)->format('Y-m-d');
         $prodday = Production_target::where('date','=',$date)->first();
         $holi = WorkSchedule::where('date','=',$date)->value('holidayname');
@@ -161,7 +165,35 @@ class AttendancePreviewController extends Controller
 
             $date = Carbon::createFromFormat('m/d/Y', $mdate)->format('Y-m-d');
 
-                 $staffs = Attendance::where([['date', '=', $date], ['shop_id', '=', $shopid]])->get();
+            //Loading all employees
+            $employees = Employee::where([['shop_id', '=', $shopid],['status','Active']])->get();
+            foreach($employees as $empl){
+                $drct = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('direct_hrs');
+                $direct[$empl->id] = ($drct!='') ? $drct : '';
+                $indrct = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('indirect_hrs');
+                $indirect[$empl->id] = ($indrct!='') ? $indrct : '';
+                $lnhrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('loaned_hrs');
+                $loanhrs[$empl->id] = ($lnhrs!='') ? $lnhrs : '';
+                $spLnto = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('shop_loaned_to');
+                $shoploanto[$empl->id] = ($spLnto!='') ? $spLnto : '';
+                $authhrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('auth_othrs');
+                $authhours[$empl->id] = ($authhrs!='') ? $authhrs : '';
+                $ot = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('othours');
+                $othrs[$empl->id] = ($ot!='') ? $ot : '';
+                $inOThrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('indirect_othours');
+                $indirOThrs[$empl->id] = ($inOThrs!='') ? $inOThrs : '';
+                $otlnhrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('otloaned_hrs');
+                $otloanhrs[$empl->id] = ($otlnhrs!='') ? $otlnhrs : '';
+                $otlnshop = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('otshop_loaned_to');
+                $otshopln[$empl->id] = ($otlnshop!='') ? $otlnshop : '';
+                $dsc = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('workdescription');
+                $desc[$empl->id] = ($dsc!='') ? $dsc : '';
+
+                $sumHrs[$empl->id] = $drct + $indrct + $lnhrs;
+            }
+            //return $indirect;
+
+                 //$staffs = Attendance::where([['date', '=', $date], ['shop_id', '=', $shopid]])->get();
 
                     $confirm = Attendance_status::where([['date', '=', $date], ['shop_id', '=', $shopid]])->first();
 
@@ -172,8 +204,134 @@ class AttendancePreviewController extends Controller
 
 
                     $data = array(
+                        'loanhrs'=>$loanhrs, 'direct'=>$direct, 'indirect'=>$indirect, 'othrs'=>$othrs, 'authhours'=>$authhours, 'sumHrs'=>$sumHrs,
+                        'desc'=>$desc, 'otshopln'=>$otshopln, 'otloanhrs'=>$otloanhrs, 'indirOThrs'=>$indirOThrs, 'shoploanto'=>$shoploanto,
+
                         'num' => 1, 'i'=>0, 'dayname'=>$dayname, 'attstatus'=>$attstatus,
-                        'staffs'=>$staffs,'text'=>$text, 'prodday'=>$prodday,
+                        'employees'=>$employees,'text'=>$text, 'prodday'=>$prodday,
+                        'icon'=>$icon,'color'=>$color,'disabled'=>$disabled,
+                        'shop' => $shopname,'conversation'=>$conversation,
+                        'shopid' => $shopid,'loanee'=>$loanee,
+                        'shops' => $allshops,'test'=>'testing',
+                        'date' => $date, 'indirectshop'=>$indirectshop,
+                        'btncolor' => 'warning', 'btntext' => 'Update',
+                        'color1'=>($check) ? 'success' : 'danger',
+                        'text1'=>($check) ? 'View Loaned' : 'Approve Loaned',
+                        'icon1'=>($check) ? 'check' : 'window-minimize',
+                    );
+                    return view('attendancepreview.index')->with($data);
+
+        }else{
+            Toastr::error('Sorry! Attendance Not Yet Marked','Not Marked');
+            return back();
+        }
+
+    }
+
+    public function checkattendance1(Request $request){
+        if(isset($id)){
+            $status = Attendance_status::where('id',$id)->first();
+            $mdate =Carbon::createFromFormat('Y-m-d', $status->date)->format('m/d/Y');
+            $shopid = $status->shop_id;
+        }else{
+            $mdate =$request->input('mdate');
+            $shopid = $request->input('shop');
+        }
+
+        $date = Carbon::createFromFormat('m/d/Y', $mdate)->format('Y-m-d');
+        $prodday = Production_target::where('date','=',$date)->first();
+        $holi = WorkSchedule::where('date','=',$date)->value('holidayname');
+        if(!empty($holi)){
+            $dayname = $holi;
+        }else{
+            $dayOfTheWeek = Carbon::parse($mdate)->dayOfWeek;
+            $weekMap = [0 => 'Sun',1 => 'Mon',2 => 'Tue',3 => 'Wed',4 => 'Thu',5 => 'Fri',6 => 'Sat'];
+            $dayname = $weekMap[$dayOfTheWeek];
+        }
+
+        //CHECK LOANEES
+        $loanee = Attendance::where([['date', '=', $date], ['otshop_loaned_to', '=', $shopid]])->first();
+        $check = Attendance::where([['loan_confirm', '=', 1],['date', '=', $date], ['otshop_loaned_to', '=', $shopid]])
+                                ->first();
+
+        //return $date;
+       $marked = Attendance::where([['date', '=', $date], ['shop_id', '=', $shopid]])->first();
+        if($marked != null){
+            //$shopname = Shop::where('id', $shopid)->value('shop_name');
+            $shopname = Shop::where([['id', $shopid],['overtime','=','1']])->value('report_name');
+            $allshops = Shop::where('overtime','=','1')->get(['id','report_name']);
+            $shopno = 0;
+            foreach($allshops as $one){
+                if($one->report_name == $shopname){
+                    break;
+                }
+                $shopno++;
+            }
+
+            unset($allshops[$shopno]);
+            $indirectshop = Shop::where('id','=',$shopid)->value('check_shop');
+            //SUBMISSION STATUS
+            $attstatus = Attendance_status::where([['shop_id','=',$shopid],['date','=',$date]])->first();
+                if($attstatus == "" || $attstatus->status_name == "saved"){
+                    Toastr::error('Sorry! Attendance Not Yet Marked','Not Marked');
+                    return back();
+                }
+
+            //CONVERSATION
+            $statusid = Attendance_status::where([['shop_id','=',$shopid],['date','=',$date]])->value('id');
+            if(!empty($statusid)){
+                $conversation = Review_conversation::where('statusid','=',$statusid)
+                                ->get(['user_id','statusid','sender','message','created_at']);
+            }
+
+            $date = Carbon::createFromFormat('m/d/Y', $mdate)->format('Y-m-d');
+
+            //$indrct = Attendance::where([['staff_id',296],['date','2022-02-15'], ['shop_id',2]])->value('indirect_hrs');
+            //return $rr = ($indrct!="")? "ee": $indrct;
+            //Loading all employees
+            $employees = Employee::where([['shop_id', '=', $shopid],['status','Active']])->get();
+            foreach($employees as $empl){
+                $drct = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('direct_hrs');
+                $direct[$empl->id] = ($drct!='') ? $drct : '';
+                $indrct = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('indirect_hrs');
+                $indirect[$empl->id] = ($indrct!='') ? $indrct : '';
+                $lnhrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('loaned_hrs');
+                $loanhrs[$empl->id] = ($lnhrs!='') ? $lnhrs : '';
+                $spLnto = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('shop_loaned_to');
+                $shoploanto[$empl->id] = ($spLnto!='') ? $spLnto : '';
+                $authhrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('auth_othrs');
+                $authhours[$empl->id] = ($authhrs!='') ? $authhrs : '';
+                $ot = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('othours');
+                $othrs[$empl->id] = ($ot!='') ? $ot : '';
+                $inOThrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('indirect_othours');
+                $indirOThrs[$empl->id] = ($inOThrs!='') ? $inOThrs : '';
+                $otlnhrs = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('otloaned_hrs');
+                $otloanhrs[$empl->id] = ($otlnhrs!='') ? $otlnhrs : '';
+                $otlnshop = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('otshop_loaned_to');
+                $otshopln[$empl->id] = ($otlnshop!='') ? $otlnshop : '';
+                $dsc = Attendance::where([['staff_id',$empl->id],['date', '=', $date], ['shop_id', '=', $shopid]])->value('workdescription');
+                $desc[$empl->id] = ($dsc!='') ? $dsc : '';
+
+                $sumHrs[$empl->id] = $drct + $indrct + $lnhrs;
+            }
+            //return $indirect;
+
+                 //$staffs = Attendance::where([['date', '=', $date], ['shop_id', '=', $shopid]])->get();
+
+                    $confirm = Attendance_status::where([['date', '=', $date], ['shop_id', '=', $shopid]])->first();
+
+                    $icon = $confirm ? 'check' : 'window-minimize';
+                    $color = $confirm ? 'warning' : 'danger';
+                    $disabled = $confirm ? 'disabled' : 'enabled';
+                    $text = $confirm ? 'Attendance Confirmed' : 'Confirm Attendance';
+
+
+                    $data = array(
+                        'loanhrs'=>$loanhrs, 'direct'=>$direct, 'indirect'=>$indirect, 'othrs'=>$othrs, 'authhours'=>$authhours, 'sumHrs'=>$sumHrs,
+                        'desc'=>$desc, 'otshopln'=>$otshopln, 'otloanhrs'=>$otloanhrs, 'indirOThrs'=>$indirOThrs, 'shoploanto'=>$shoploanto,
+
+                        'num' => 1, 'i'=>0, 'dayname'=>$dayname, 'attstatus'=>$attstatus,
+                        'employees'=>$employees,'text'=>$text, 'prodday'=>$prodday,
                         'icon'=>$icon,'color'=>$color,'disabled'=>$disabled,
                         'shop' => $shopname,'conversation'=>$conversation,
                         'shopid' => $shopid,'loanee'=>$loanee,
@@ -254,6 +412,10 @@ class AttendancePreviewController extends Controller
         $direct = $request->direct;
         $indirect = $request->indirect;
 
+        $overtime = $request->overtime;
+        $indovertime = $request->indovertime;
+
+        $authhrs = $request->auth_hrs;
 
         $workdescription = $request->workdescription;
         $date = $request->input('date');
@@ -265,32 +427,47 @@ class AttendancePreviewController extends Controller
         $dirshopto_id = $request->dirshopto;
         $loandir = $request->loandir;
 
-            $markedid = Attendance::where([['date', '=', $date], ['shop_id', '=', $shop_id]])->get('id');//->first();
 
             try{
             DB::beginTransaction();
-            for($i = 0; $i < count($staffid); $i++)
-            {
-                $attend = Attendance::find($markedid[$i]->id);
 
-                    $attend->staff_id = $staffid[$i];
-                    $attend->direct_hrs = $direct[$i];
-                    $attend->indirect_hrs = $indirect[$i];
 
-                    $attend->otshop_loaned_to = $overshoptoid[$i];
-                    $attend->otloaned_hrs = $loanov[$i];
+                for($i = 0; $i < count($staffid); $i++)
+                {
+                     $markedid = Attendance::where([['staff_id',$staffid[$i]],['date',$date], ['shop_id', '=', $shop_id]])->first();
+                        if($markedid != ''){
+                           $attend = Attendance::find($markedid->id);
+                        }else{
+                            $attend = new Attendance;
+                            $attend->date = $date;
+                            $attend->shop_id = $shop_id;
+                            $attend->user_id = auth()->user()->id;
+                        }
 
-                    $attend->shop_loaned_to = $dirshopto_id[$i];
-                    $attend->loaned_hrs = $loandir[$i];
+                        $attend->staff_id = $staffid[$i];
+                        $drct = ($direct[$i] != "")? $direct[$i] : 0;
+                        $attend->direct_hrs = $drct ;
+                        $indrct = ($indirect[$i] == "")? 0 : $indirect[$i];
+                        $attend->indirect_hrs = $indrct;
 
-                    $attend->workdescription = $workdescription[$i];
+                        $othours = ($overtime[$i] == "")? 0 : $overtime[$i];
+                        $attend->othours = $othours;
+                        $indirect_othours = ($indovertime[$i] == "")? 0 : $indovertime[$i];
+                        $attend->indirect_othours = $indirect_othours;
+                        $attend->auth_othrs = ($authhrs[$i] == "")? 0 : $authhrs[$i];
 
-                    $hours = Attendance::Where('id', '=', $markedid[$i]->id)
-                                    ->sum(DB::raw('othours + indirect_othours'));
-                    $attend->efficiencyhrs = (($direct[$i] + $indirect[$i]) * 0.97875) + $hours;
+                        $attend->otshop_loaned_to = ($overshoptoid[$i] == "")? 0 : $overshoptoid[$i];
+                        $attend->otloaned_hrs = ($loanov[$i] == "")? 0 : $loanov[$i];
 
-                    $attend->save();
-                }
+                        $attend->shop_loaned_to = ($dirshopto_id[$i] == "")? 0 : $dirshopto_id[$i];
+                        $attend->loaned_hrs = ($loandir[$i] == "")? 0 : $loandir[$i];
+
+                        $attend->workdescription = $workdescription[$i];
+
+                        $attend->efficiencyhrs = (($drct + $indrct) * 0.97875) + $othours + $indirect_othours;
+
+                        $attend->save();
+                    }
 
 
             //ATTENDANCE STATUS

@@ -277,7 +277,28 @@ draw_data(shop_id, vehicle_id, action );
             function draw_data(shop_id, vehicle_id, action) {
 
 
-              
+                $.ajax({
+                    method: 'POST',
+                    url: '{{ route('load_defects') }}',
+                    dataType: 'json',
+                    data: {
+                        shop_id: shop_id,
+                        vehicle_id: vehicle_id
+                    },
+                    success: function(result) {
+                        if (result) {
+
+                            console.log(result.data.vehicle_id);
+                       
+                            $('#vehicle_record').html(`
+       
+            ${result.data.vehicle_data.vin_no}
+ `);
+                            //toggle_dsp_input();
+                        }
+                    },
+                });
+
 
 
 

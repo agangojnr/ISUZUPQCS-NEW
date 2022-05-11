@@ -67,11 +67,11 @@
                                 'method'=>'post', 'enctype' => 'multipart/form-data']); !!}
                                 <div class="row mb-2">
                                     <div class="col-4">
-                                        <h4 class="card-title">Filter Schedule</h4>
-                                    <div class='input-group'>
-                                        <input type="text" name="mdate" id="datepicker" class="form-control bg-white" readonly
-                                        value="{{\Carbon\Carbon::createFromFormat('Y-m-d', $first)->format('F Y')}}" autocomplete="off" />
 
+                                    <label>Filter by Month:</label>
+                                    <div class="input-group">
+                                        <input type="text" name="mdate" class="form-control form-control-1 input-sm from bg-white" readonly
+                                        value="{{\Carbon\Carbon::createFromFormat('Y-m-d', $first)->format('F Y')}}" autocomplete="off" />
                                         <div class="input-group-append">
                                             <span class="input-group-text">
                                                 <span class="ti-calendar"></span>
@@ -81,7 +81,7 @@
 
                                 </div>
                                 <div class="col-2">
-                                    <button type="submit" class="btn btn-success mt-4">Apply Filter</button>
+                                    <button type="submit" class="btn btn-success mt-4"><i class="mdi mdi-filter"></i> Filter Data</button>
                                 </div>
                                 <div class="col-6">
 
@@ -179,7 +179,9 @@
                                                                             </td>
                                                                             @for ($i = 0; $i < count($dates); $i++)
                                                                                 <td style="font-size: 14px;" id="units_{{$dateid[$i]}}_{{$item->id}}" class="units" data-editable>
-                                                                                    {{$noofunits[$dateid[$i]][$item->id]}}</td>
+                                                                                    {{$noofunits[$dateid[$i]][$item->id]}}
+                                                                                </td>
+                                                                                <input type="hidden" id="sched_{{$dateid[$i]}}_{{$item->id}}" name="unitdata[]" value="{{$dateid[$i]}}_{{$item->id}}_{{$noofunits[$dateid[$i]][$item->id]}}">
                                                                             @endfor
                                                                             <td>
                                                                             {{$unitsperroute[$item->id]}}
@@ -470,6 +472,14 @@
     <script type="text/javascript">
         $(".select2").select2();
     </script>
+    <script>
+        $('.from').datepicker({
+            autoclose: true,
+            minViewMode: 1,
+            format: "MM yyyy",
+        });
+    </script>
+
     <script type="text/javascript">
     $(function(){
         var today = new Date();
@@ -503,7 +513,7 @@
     var $el = $(this);
     //console.log($el.text());
 
-    var $input = $('<input type="text" class="form-control" style="font-size: 14px; width: 70px;"/>').val( $el.text() );
+    var $input = $('<input type="text" class="form-control entire" style="font-size: 14px; width: 70px;"/>').val( $el.text() );
     $el.html( $input );
     var $id_arr = $el.attr('id');
 
@@ -519,6 +529,9 @@
     var $dates = $('<input type="hidden" name="dateid[]" value="'+$dateid+'"/>');
     var $routes = $('<input type="hidden" name="routeid[]" value="'+$routeid+'"/>');
 
+    var dt = $dateid+'_'+$routeid+'_'+$p;
+    $("#sched_"+$dateid+"_"+$routeid+"").val(dt);
+
     $el.html( $p );
     $el.append( $units );
     $el.append( $dates );
@@ -531,6 +544,9 @@
     $input.one('blur', save).focus();
 
     });
+
+
+
 
 
 //UPSTREAMSCHEDULE

@@ -1,21 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Summary</title>
 
-@extends('layouts.auth')
-
-@section('content')
-
+    @include('layouts.header.header')
+    @yield('after-styles')
+</head>
+<body>
 
     <!-- ============================================================== -->
     <!-- Bread crumb and right sidebar toggle -->
     <!-- ============================================================== -->
-    <div class="row page-titles">
-        <div class="col-md-12 col-12 align-self-center">
-            <h3 class="text-center text-themecolor mb-0" style="color: #da251c;">PQCS-DASHBOARD</h3>
-          
+    <div class="row page-titles" style="background-color:#da251c;">
+        <div class="col-md-5 col-12 align-self-center">
+            <h3 class="text-white mb-0">REALTIME UNIT POSITION TRACKING</h3>
+            <ol class="breadcrumb mb-0 p-0 bg-transparent">
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
+                <li class="breadcrumb-item active text-white">UNIT POSITION TRACKING</li>
+            </ol>
+
         </div>
+        <div class="col-md-7">
+            <div class="row float-left w-100">
+                <div class="col-lg-7">
+                    <span  class="btn waves-effect waves-light btn-lg"
+                    style="background-color: #DAF7A6; opacity: 0.9; font-familiy:Times New Roman;">
 
+                    <h5 class="float-right mt-2">{{\Carbon\Carbon::today()->format('j M Y')}}</h5></span>
+                </div>
+                <div class="col-5">
+                    <a href="/home" id="btn-add-contact" class="btn btn-primary float-right"
+               ><i class="mdi mdi-arrow-left font-16"></i> Back to Home</a>
+                </div>
+            </div>
 
-           
-
+        </div>
     </div>
     <!-- ============================================================== -->
     <!-- End Bread crumb and right sidebar toggle -->
@@ -29,15 +51,24 @@
          <div class="row">
                             <!-- Column -->
 
-                            @foreach($shops as $shop)
+                    @foreach($shops as $shop)
 
-                              <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-3 col-md-6">
                         <div class="card border-bottom border-info">
                             <div class="card-body">
                                 <div class="d-flex no-block align-items-center">
                                     <div>
-                                        <h2>{{count($shop->unitmovement)}}</h2>
-                                        <h3 class="text-info">{{$shop->shop_name}} </h3>
+                                        <h2>
+                                            @if ($shop->buffer == 1)
+                                            <span>{{$buffer[$shop->id]}}</span>
+                                            <span>|</span>
+                                            <span>{{$inshop[$shop->id]}}</span> </h2>
+                                            @else
+                                            {{count($shop->unitmovement)}}
+                                            @endif
+                                        <h3 class="text-info">
+                                            <a href="{{ route('unitspershop', $shop->id)}}">{{$shop->shop_name}}</a>
+                                        </h3>
                                     </div>
                                     <div class="ml-auto">
                                         <span class="text-info display-6"><i class="ti-truck"></i></span>
@@ -46,49 +77,13 @@
                             </div>
                         </div>
                     </div>
-                         <!--<div class="col-lg-3 col-md-6">
-                                <div class="card bg-primary">
-                                    <div class="card-body">
-                                        <div id="myCarousel" class="carousel slide" data-ride="carousel">
-                                                <h3 class="text-white font-weight-medium">{{$shop->shop_name}} : {{count($shop->unitmovement)}}</h3>
-                                                    
-                                            <div class="carousel-inner">
-                                                <div class="carousel-item active flex-column">
-                                                   
-                                                    <h3 class=" text-center text-white font-weight-medium">123</h3>
-                                                    <div class="text-white mt-2">
-                                                        <i>- Completed Today</i>
-                                                    </div>
-                                                </div>
-                                                <div class="carousel-item flex-column">
-                                                    
-                                                    <h3 class="text-center text-white font-weight-medium">21</h3>
-                                                    <div class="text-white mt-2">
-                                                        <i>- Employees</i>
-                                                    </div>
-                                                </div>
-                                                <div class="carousel-item flex-column">
-                                                    
-                                                    <h3 class="text-white font-weight-medium">80%</h3>
-                                                    <div class="text-white mt-2">
-                                                        <i>- Efficency</i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>-->
-                            @endforeach
-                        
-                        </div>
+
+                    @endforeach
+
+                </div>
 
 
 
-
-
-
-@endsection
 @section('after-scripts')
 <script>
      var time = new Date().getTime();
@@ -97,9 +92,9 @@
      });
 
      function refresh() {
-         if(new Date().getTime() - time >= 60000) 
+         if(new Date().getTime() - time >= 60000)
              window.location.reload(true);
-         else 
+         else
              setTimeout(refresh, 10000);
      }
 

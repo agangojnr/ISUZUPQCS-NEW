@@ -235,16 +235,21 @@ function getProductionstartdate($shopid,$today){
     $endthismonth = Carbon::parse($today)->endOfMonth()->format('Y-m-d');
     $monthschdates = Production_target::whereBetween('date', [$firstthismonth, $endthismonth])
             ->where('schedule_part','entire')->groupby('date')->orderBy('date', 'ASC')->get(['date']);
-    foreach($monthschdates as $schdt){ $mnthprodndays[] = $schdt->date; }
+    if(count($monthschdates) > 0){
+        foreach($monthschdates as $schdt){ $mnthprodndays[] = $schdt->date; }
 
-    $allschdates = Production_target::where('schedule_part','entire')->groupby('date')->get(['date']);
-    foreach($allschdates as $schdt){ $allprodndays[] = $schdt->date; }
+        $allschdates = Production_target::where('schedule_part','entire')->groupby('date')->get(['date']);
+        foreach($allschdates as $schdt){ $allprodndays[] = $schdt->date; }
 
-    $pos = array_search($mnthprodndays[0], $allprodndays);
-    $startpos = $pos - $shopoffdays[$shopid];
-    $fstprodndaythismonth = $allschdates[$startpos];
+        $pos = array_search($mnthprodndays[0], $allprodndays);
+        $startpos = $pos - $shopoffdays[$shopid];
+        $fstprodndaythismonth = $allschdates[$startpos];
 
-    return $fstprodndaythismonth['date'];
+        return $fstprodndaythismonth['date'];
+    }else{
+        return $today;
+    }
+
 }
 
 function getProductionenddate($shopid,$today){
@@ -300,98 +305,260 @@ function getplantTLAtarget(){
 
 
 function getshopTLAtarget($shopid){
-    $normemps = Employee::where([['team_leader','no'],['shop_id',$shopid],['status','Active']])->count();
-    $noteaml = Employee::where([['team_leader','yes'],['shop_id',$shopid],['status','Active']])->count();
-    $tlavailability = ($normemps/($normemps+$noteaml))*100;
+    $normemps = Employee::where([['attachee','no'],['team_leader','no'],['shop_id',$shopid],['status','Active']])->count();
+    $noteaml = Employee::where([['attachee','no'],['team_leader','yes'],['shop_id',$shopid],['status','Active']])->count();
+    $tlavailability = ($normemps+$noteaml == 0) ? 0 : ($normemps/($normemps+$noteaml))*100;
     return $tlavailability;
 }
 
-function getPlantEfficiency($start, $end){
-    $efshops = Shop::where('check_shop','=','1')->get(['report_name','id']);
-    $mtddrhrs = 0; $mtdlnhrs = 0; $mtdotlnhrs = 0;
-    foreach($efshops as $shop){
-        $mtddrhrs += Attendance::whereBetween('date', [$start, $end])->where('shop_id',$shop->id)->sum(DB::raw('efficiencyhrs'));
-        $mtdlnhrs += Attendance::whereBetween('date', [$start, $end])->where('shop_loaned_to',$shop->id)->sum(DB::raw('loaned_hrs'));
-        $mtdotlnhrs += Attendance::whereBetween('date', [$start, $end])->where('shop_loaned_to',$shop->id)->sum(DB::raw('otloaned_hrs'));
-    }
-    $MTDinput = $mtddrhrs + $mtdlnhrs + $mtdotlnhrs;
-    $MTDoutput = Unitmovement::whereBetween('datetime_out', [$start, $end])->sum('std_hrs');
-
-    $MTDplant_eff = ($MTDinput > 0) ? round(($MTDoutput/$MTDinput)*100,2) : 0;
-
-    return $MTDplant_eff;
-}
-
 function getTarget($date){
-    $starts = [1=>'01-01',2=>'04-01',3=>'07-01',4=>'10-01'];
-    $ends = [1=>'03-31',2=>'06-30',3=>'09-30',4=>'12-31'];
-
-    $year = Carbon::createFromFormat('Y-m-d', $date)->format('Y');
-
-    $fst1 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[1])->format('Y-m-d');
-    $fst2 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[2])->format('Y-m-d');
-    $fst3 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[3])->format('Y-m-d');
-    $fst4 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[4])->format('Y-m-d');
-    $last1 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[1])->format('Y-m-d');
-    $last2 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[2])->format('Y-m-d');
-     $last3 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[3])->format('Y-m-d');
-    $last4 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[4])->format('Y-m-d');
-
-    if(carbon::parse($fst1) <= $date && carbon::parse($last1) >= $date){
-        $quart = '1st Quarter';
-    }elseif(carbon::parse($fst2) <= $date && carbon::parse($last2) >= $date){
-        $quart = '2nd Quarter';
-    }elseif(carbon::parse($fst3) <= $date && carbon::parse($last3) >= $date){
-        $quart = '3rd Quarter';
-    }elseif(carbon::parse($fst4) <= $date && carbon::parse($last4) >= $date){
-        $quart = '4th Quarter';
-    }
-
-    $targets = IndivTarget::where([['year',$year],['yearquarter',$quart]])->first();
+    $start = carbon::parse($date)->startOfMonth()->format('Y-m-d');
+    $end = carbon::parse($date)->endOfMonth()->format('Y-m-d');
+    $targets = IndivTarget::whereBetween('month',[$start,$end])->first();
     $targets = ($targets == "") ? 0 : $targets;
 
     return $targets;
 }
 
-function getshopEfficiency($start,$end,$shopid){
-        $spmtddrhrs = Attendance::whereBetween('date', [$start, $end])->where('shop_id',$shopid)->sum(DB::raw('efficiencyhrs'));
-        $spmtdlnhrs = Attendance::whereBetween('date', [$start, $end])->where('shop_loaned_to',$shopid)->sum(DB::raw('loaned_hrs'));
-        $spmtdotlnhrs = Attendance::whereBetween('date', [$start, $end])->where('shop_loaned_to',$shopid)->sum(DB::raw('otloaned_hrs'));
+function getPlantEfficiency($start, $end){
+    $efshops = Shop::where('check_shop','=','1')->pluck('id')->all();
 
-    $spMTDinput = $spmtddrhrs + $spmtdlnhrs + $spmtdotlnhrs;
-    $spMTDoutput = Unitmovement::whereBetween('datetime_out', [$start, $end])->where('shop_id',$shopid)->sum('std_hrs');
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'othours')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'loaned_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'otloaned_hrs')->where('attachee','no')->get();
 
-    $spMTDplant_eff = ($spMTDinput > 0) ? round(($spMTDoutput/$spMTDinput)*100) : 0;
 
+    $spMTDinput = 0;
+    foreach($employees as $emp){
+        $spMTDinput += (($emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_othours) * 0.97875) + ($emp->empattendance_sum_loaned_hrs + $emp->empattendance_sum_otloaned_hrs);
+    }
+
+    $spMTDoutput = Unitmovement::whereBetween('datetime_out', [$start, $end])->sum('std_hrs');
+    $spMTDplant_eff = ($spMTDinput > 0) ? round(($spMTDoutput/$spMTDinput)*100, 2) : 0;
     return $spMTDplant_eff;
 }
 
-function getGCATarget($date){
-    $starts = [1=>'01-01',2=>'04-01',3=>'07-01',4=>'10-01'];
-    $ends = [1=>'03-31',2=>'06-30',3=>'09-30',4=>'12-31'];
+function getshopEfficiency($start,$end,$shopid){
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+        $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+        $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+    } ],'othours')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+        $query->whereBetween('date', [$start, $end])->where('shop_loaned_to',$shopid);
+    } ],'loaned_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+        $query->whereBetween('date', [$start, $end])->where('shop_loaned_to',$shopid);
+    } ],'otloaned_hrs')->where([['attachee','no'],['shop_id',$shopid]])->get();
 
-    $year = Carbon::createFromFormat('Y-m-d', $date)->format('Y');
 
-    $fst1 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[1])->format('Y-m-d');
-    $fst2 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[2])->format('Y-m-d');
-    $fst3 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[3])->format('Y-m-d');
-    $fst4 = Carbon::createFromFormat('Y-m-d', $year.'-'.$starts[4])->format('Y-m-d');
-    $last1 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[1])->format('Y-m-d');
-    $last2 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[2])->format('Y-m-d');
-     $last3 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[3])->format('Y-m-d');
-    $last4 = Carbon::createFromFormat('Y-m-d', $year.'-'.$ends[4])->format('Y-m-d');
-
-    if(carbon::parse($fst1) <= $date && carbon::parse($last1) >= $date){
-        $quart = '1st Quarter';
-    }elseif(carbon::parse($fst2) <= $date && carbon::parse($last2) >= $date){
-        $quart = '2nd Quarter';
-    }elseif(carbon::parse($fst3) <= $date && carbon::parse($last3) >= $date){
-        $quart = '3rd Quarter';
-    }elseif(carbon::parse($fst4) <= $date && carbon::parse($last4) >= $date){
-        $quart = '4th Quarter';
+    $spMTDinput = 0;
+    foreach($employees as $emp){
+        $spMTDinput += (($emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_othours) * 0.97875) + ($emp->empattendance_sum_loaned_hrs + $emp->empattendance_sum_otloaned_hrs);
     }
 
-    $targets = GcaTarget::where([['year',$year],['yearquarter',$quart]])->first();
+    $spMTDoutput = Unitmovement::whereBetween('datetime_out', [$start, $end])->where('shop_id',$shopid)->sum('std_hrs');
+    $spMTDplant_eff = ($spMTDinput > 0) ? round(($spMTDoutput/$spMTDinput)*100, 2) : 0;
+    return $spMTDplant_eff;
+}
+
+function getshopAbsenteeism($start,$end,$shopid){
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+        $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+        $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+    } ],'indirect_hrs')
+    ->withCount(['empattendance'=>function($query) use ($start,$end,$shopid) {
+        $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+    } ])->where([['attachee','no'],['shop_id',$shopid]])->get();
+
+    $workedhrs = 0; $expectedhrs = 0;
+    foreach($employees as $emp){
+        $workedhrs += $emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_indirect_hrs;
+        $expectedhrs += $emp->empattendance_count * 8;
+    }
+    $absenthrs = $expectedhrs - $workedhrs;
+    ($absenthrs > 0) ? $MTDabsentiesm = round((($absenthrs/$expectedhrs)*100),2) : $MTDabsentiesm = 0;
+    return $MTDabsentiesm;
+}
+
+function getAbsenteeism($start,$end){
+    $abshops = [1,2,3,5,6,8,10,11,12,13,16,17,18,22,23,24,25]; //except   30,29,27,21,20,19
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$abshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$abshops);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$abshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$abshops);
+    } ],'indirect_hrs')
+    ->withCount(['empattendance'=>function($query) use ($start,$end,$abshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$abshops);
+    } ])->where('attachee','no')->get();
+
+    $workedhrs = 0; $expectedhrs = 0;
+    foreach($employees as $emp){
+        $workedhrs += $emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_indirect_hrs;
+        $expectedhrs += $emp->empattendance_count * 8;
+    }
+    $absenthrs = $expectedhrs - $workedhrs;
+    ($absenthrs > 0) ? $MTDabsentiesm = round((($absenthrs/$expectedhrs)*100),2) : $MTDabsentiesm = 0;
+    return $MTDabsentiesm;
+}
+
+function getshopTLavailability($start,$end,$shopid){
+$employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+    $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+} ],'direct_hrs')
+->withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+    $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+} ],'othours')
+->withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+    $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+} ],'indirect_hrs')
+->withSum(['empattendance'=>function($query) use ($start,$end,$shopid) {
+    $query->whereBetween('date', [$start, $end])->where('shop_id',$shopid);
+} ],'indirect_othours')
+->where([['team_leader','=','yes'],['status','=','Active']])->get();
+
+$ttindirect = 0; $tthrs = 0;
+foreach($employees as $emp){
+    $ttindirect += $emp->empattendance_sum_indirect_othours + $emp->empattendance_sum_indirect_hrs;
+    $tthrs += $emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_othours + $emp->empattendance_sum_indirect_othours + $emp->empattendance_sum_indirect_hrs;
+}
+$tlavail = ($ttindirect > 0) ? round(($ttindirect/$tthrs)*100,2) : 0;
+return $tlavail;
+
+}
+
+function getTLavailability($start,$end){
+    $efshops = Shop::where('check_shop','=','1')->pluck('id')->all();
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'othours')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'indirect_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'indirect_othours')
+    ->where([['team_leader','=','yes'],['status','=','Active']])->get();
+
+    $ttindirect = 0; $tthrs = 0;
+    foreach($employees as $emp){
+        $ttindirect += $emp->empattendance_sum_indirect_othours + $emp->empattendance_sum_indirect_hrs;
+        $tthrs += $emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_othours + $emp->empattendance_sum_indirect_othours + $emp->empattendance_sum_indirect_hrs;
+    }
+    $tlavail = ($ttindirect > 0) ? round(($ttindirect/$tthrs)*100,2) : 0;
+    return $tlavail;
+}
+
+
+function getCVLCVEfficiency($start, $end,$section){
+    if($section == 'cv'){
+        $efshops = Shop::where('lcvcv_share','cv')->orwhere('lcvcv_share','share')->pluck('id')->all();
+    }else{
+         $efshops = Shop::where('lcvcv_share','lcv')->pluck('id')->all();
+    }
+
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'othours')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'loaned_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'otloaned_hrs')->where('attachee','no')->get();
+
+
+    $spMTDinput = 0;
+    foreach($employees as $emp){
+        $spMTDinput += (($emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_othours) * 0.97875) + ($emp->empattendance_sum_loaned_hrs + $emp->empattendance_sum_otloaned_hrs);
+    }
+
+    $spMTDoutput = Unitmovement::whereBetween('datetime_out', [$start, $end])->whereIn('shop_id',$efshops)->sum('std_hrs');
+    $spMTDplant_eff = ($spMTDinput > 0) ? round(($spMTDoutput/$spMTDinput)*100, 2) : 0;
+    return $spMTDplant_eff;
+}
+
+function getCVLCVAbsenteeism($start,$end,$section){
+    if($section == 'cv'){
+        $efshops = Shop::where('lcvcv_share','cv')->orwhere('lcvcv_share','share')->pluck('id')->all();
+    }else{
+         $efshops = Shop::where('lcvcv_share','lcv')->pluck('id')->all();
+    }
+
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'indirect_hrs')
+    ->withCount(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ])->where('attachee','no')->get();
+
+    $workedhrs = 0; $expectedhrs = 0;
+    foreach($employees as $emp){
+        $workedhrs += $emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_indirect_hrs;
+        $expectedhrs += $emp->empattendance_count * 8;
+    }
+    $absenthrs = $expectedhrs - $workedhrs;
+    ($absenthrs > 0) ? $MTDabsentiesm = round((($absenthrs/$expectedhrs)*100),2) : $MTDabsentiesm = 0;
+    return $MTDabsentiesm;
+}
+
+function getCVLCVTLavailability($start,$end,$section){
+    if($section == 'cv'){
+        $efshops = Shop::where('lcvcv_share','cv')->orwhere('lcvcv_share','share')->pluck('id')->all();
+    }else{
+         $efshops = Shop::where('lcvcv_share','lcv')->pluck('id')->all();
+    }
+
+    $employees = Employee::withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'direct_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'othours')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'indirect_hrs')
+    ->withSum(['empattendance'=>function($query) use ($start,$end,$efshops) {
+        $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$efshops);
+    } ],'indirect_othours')
+    ->where([['team_leader','=','yes'],['status','=','Active']])->get();
+
+    $ttindirect = 0; $tthrs = 0;
+    foreach($employees as $emp){
+        $ttindirect += $emp->empattendance_sum_indirect_othours + $emp->empattendance_sum_indirect_hrs;
+        $tthrs += $emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_othours + $emp->empattendance_sum_indirect_othours + $emp->empattendance_sum_indirect_hrs;
+    }
+    $tlavail = ($ttindirect > 0) ? round(($ttindirect/$tthrs)*100,2) : 0;
+    return $tlavail;
+}
+
+function getGCATarget($date){
+    $start = carbon::parse($date)->startOfMonth()->format('Y-m-d');
+    $end = carbon::parse($date)->endOfMonth()->format('Y-m-d');
+    $targets = GcaTarget::whereBetween('month',[$start,$end])->first();
+
     $targets = ($targets == "") ? 0 : $targets;
 
     return $targets;
@@ -401,7 +568,6 @@ function getGCATarget($date){
 //drl calculcations
 
 function month_to_date_drl(){
-
     $startDate = Carbon::now(); //returns current day
     $endDate = Carbon::now(); //returns current day
     $firstDay = $startDate->firstOfMonth();
@@ -627,9 +793,6 @@ $master['drl']=$drl ;
 
 
 function drl_per_shop_today($shop_id,$date=NULL){
-
-
-
     if($date){
 
         $start=date_for_database($date);

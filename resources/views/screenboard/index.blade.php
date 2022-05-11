@@ -270,7 +270,7 @@
                                                 <td id="cvwdpv"></td>
 												<td id="lcvwdpvtarget"></td>
                                                 <td id="lcvwdpv"></td>
-
+                                                
                                             </tr>
                                         </table>
                                     </div>
@@ -461,7 +461,7 @@
 
             function runningTime() {
                 $.ajax({
-                        url: '{{route('screenboardindexReload')}}',
+                        url: '{{route('timer')}}',
                         method: "GET",
                         dataType: 'json',
                         data:{'section':"{{$_GET['section']}}",'shift':"{{$_GET['shift']}}"},
@@ -478,7 +478,7 @@
             refresher();
          setInterval(function () {
             refresher();
-         }, 3000);
+         }, 300000);
      });
 
 

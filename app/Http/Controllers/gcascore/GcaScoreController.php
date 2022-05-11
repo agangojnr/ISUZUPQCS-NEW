@@ -41,23 +41,26 @@ class GcaScoreController extends Controller
             $prodndays[] = $schdt->date;
         }
 
-        for($i = 0; $i < count($prodndays); $i++){
-            $dates[] = Carbon::parse($prodndays[$i])->format('jS');
-            $dayname[] = $weekMap[Carbon::parse($prodndays[$i])->dayOfWeek];
+        $datefrom1 = $datefrom;
+        while($datefrom1 <= $dateto){
+            $dates[] = Carbon::parse($datefrom1)->format('jS');
+            $dayname[] = $weekMap[Carbon::parse($datefrom1)->dayOfWeek];
 
             //CV
-            $cv_sumdefects = GcaScore::where([['lcv_cv','=','cv'],['date','=',$prodndays[$i]]])->sum(DB::raw('defectcar1 + defectcar2'));
-            $cv_samplsz = GcaScore::where([['lcv_cv','=','cv'],['date','=',$prodndays[$i]]])->value('units_sampled');
+            $cv_sumdefects = GcaScore::where([['lcv_cv','=','cv'],['date','=',$datefrom1]])->sum(DB::raw('defectcar1 + defectcar2'));
+            $cv_samplsz = GcaScore::where([['lcv_cv','=','cv'],['date','=',$datefrom1]])->value('units_sampled');
             $cv_dpvscore[] = ($cv_samplsz == 0) ? 0 : $cv_sumdefects/$cv_samplsz;
             $cv_samplesize[] = $cv_samplsz;
-            $cv_wdpvscore[] = GcaScore::where([['lcv_cv','=','cv'],['date','=',$prodndays[$i]]])->value('mtdwdpv');
+            $cv_wdpvscore[] = GcaScore::where([['lcv_cv','=','cv'],['date','=',$datefrom1]])->value('mtdwdpv');
 
             //LCV
-            $lcv_sumdefects = GcaScore::where([['lcv_cv','=','lcv'],['date','=',$prodndays[$i]]])->sum(DB::raw('defectcar1 + defectcar2'));
-            $lcv_samplsz = GcaScore::where([['lcv_cv','=','lcv'],['date','=',$prodndays[$i]]])->value('units_sampled');
+            $lcv_sumdefects = GcaScore::where([['lcv_cv','=','lcv'],['date','=',$datefrom1]])->sum(DB::raw('defectcar1 + defectcar2'));
+            $lcv_samplsz = GcaScore::where([['lcv_cv','=','lcv'],['date','=',$datefrom1]])->value('units_sampled');
             $lcv_dpvscore[] = ($lcv_samplsz == 0) ? 0 : $lcv_sumdefects/$lcv_samplsz;
             $lcv_samplesize[] = $lcv_samplsz;
-            $lcv_wdpvscore[] = GcaScore::where([['lcv_cv','=','lcv'],['date','=',$prodndays[$i]]])->value('mtdwdpv');
+            $lcv_wdpvscore[] = GcaScore::where([['lcv_cv','=','lcv'],['date','=',$datefrom1]])->value('mtdwdpv');
+
+            $datefrom1 = Carbon::parse($datefrom1)->addDays(1)->format('Y-m-d');
         }
 
         $today = Carbon::today()->format('Y-m-d');
@@ -112,14 +115,17 @@ class GcaScoreController extends Controller
             $prodndays[] = $schdt->date;
         }
 
-        for($i = 0; $i < count($prodndays); $i++){
-            $dates[] = Carbon::parse($prodndays[$i])->format('j');
-            $cvscore = GcaScore::where([['date', '=',$prodndays[$i]],['lcv_cv','=','cv']])->value('id');
-            $lcvscore = GcaScore::where([['date', '=',$prodndays[$i]],['lcv_cv','=','lcv']])->value('id');
+        $datefrom1 = $datefrom;
+        while($datefrom1 <= $dateto){
+            $dates[] = Carbon::parse($datefrom1)->format('j');
+            $cvscore = GcaScore::where([['date', '=',$datefrom1],['lcv_cv','=','cv']])->value('id');
+            $lcvscore = GcaScore::where([['date', '=',$datefrom1],['lcv_cv','=','lcv']])->value('id');
             $checkcv[] = ($cvscore > 0) ? 'success' : 'warning';
             $checklcv[] = ($lcvscore > 0) ? 'success' : 'warning';
 
+            $datefrom1 = Carbon::parse($datefrom1)->addDays(1)->format('Y-m-d');
         }
+        //for($i = 0; $i < count($prodndays); $i++){}
         //return $score;
         $data = array(
             'dates'=>$dates, 'checkcv'=>$checkcv, 'checklcv'=>$checklcv,
@@ -228,13 +234,15 @@ class GcaScoreController extends Controller
             $prodndays[] = $schdt->offline_date;
         }
 
-        for($i = 0; $i < count($prodndays); $i++){
-            $dates[] = Carbon::parse($prodndays[$i])->format('j');
-            $cvscore = GcaScore::where([['date', '=',$prodndays[$i]],['lcv_cv','=','cv']])->value('id');
-            $lcvscore = GcaScore::where([['date', '=',$prodndays[$i]],['lcv_cv','=','lcv']])->value('id');
+        $datefrom1 = $datefrom;
+        while($datefrom1 <= $dateto){
+            $dates[] = Carbon::parse($datefrom1)->format('j');
+            $cvscore = GcaScore::where([['date', '=',$datefrom1],['lcv_cv','=','cv']])->value('id');
+            $lcvscore = GcaScore::where([['date', '=',$datefrom1],['lcv_cv','=','lcv']])->value('id');
             $checkcv[] = ($cvscore > 0) ? 'success' : 'warning';
             $checklcv[] = ($lcvscore > 0) ? 'success' : 'warning';
 
+            $datefrom1 = Carbon::parse($datefrom1)->addDays(1)->format('Y-m-d');
         }
 
         $gcas = GcaScore::find($id);
@@ -355,31 +363,25 @@ class GcaScoreController extends Controller
                 'cvwdpv' => 'required',
                 'lcvdpv' => 'required',
                 'lcvwdpv' => 'required',
-                'yearquarter' => 'required'
+                'month' => 'required'
             ]);
 
             if ($validator->fails()) {
                 Toastr::error('Sorry! Fill all fields');
                 return back();
             }
+            $month = Carbon::createFromFormat('F Y', $request->input('month'))->format('Y-m-d');
 
-            $yearquarter = $request->input('yearquarter');
-            $dataarr = explode('-',$yearquarter);
-            $year = $dataarr[0];
-            $qtno = $dataarr[1];
-
-            $quarts = [1=>'1st Quarter',2=>'2nd Quarter',3=>'3rd Quarter',4=>'4th Quarter'];
-
-            $quarter = $quarts[$qtno];
+            $start = carbon::parse($month)->startOfMonth()->format('Y-m-d');
+            $end = carbon::parse($month)->endOfMonth()->format('Y-m-d');
 
             try{
                 DB::beginTransaction();
-                    $gca = GcaTarget::where([['yearquarter',$quarter],['year',$year]])->first();
+                    $gca = GcaTarget::whereBetween('month',[$start,$end])->first();
                     if($gca == ""){
                         $gca = new GcaTarget;
                     }
-                        $gca->year = $year;
-                        $gca->yearquarter = $quarter;
+                        $gca->month = $month;
                         $gca->user_id = Auth()->User()->id;
                         $gca->cvdpv = $request->input('cvdpv');
                         $gca->cvwdpv = $request->input('cvwdpv');
@@ -402,15 +404,13 @@ class GcaScoreController extends Controller
         }
 
 
-        $year = Carbon::today()->format('Y');
-        $years = [$year-1,$year,$year+1];
-        $quarters = ['First Quarter','Second Quarter','Third Quarter','Fourth Quarter'];
+        $startofyr = Carbon::now()->startOfYear()->format('Y-m-d');
+        $endofyr = Carbon::now()->endOfYear()->format('Y-m-d');
 
-        $year = Carbon::today()->format('Y');
-        $gcatargts = GcaTarget::where('year',$year)->get();
+        $selectedmonth = Carbon::parse()->format('F Y');
+        $gcatargts =  GcaTarget::whereBetween('month',[$startofyr,$endofyr])->get();
         $data = array(
-            'year'=>$year, 'years'=>$years,
-            'quarters'=>$quarters,
+            'selectedmonth'=>$selectedmonth,
             'gcatargts'=>$gcatargts,
         );
         return view('gcascore.target')->with($data);

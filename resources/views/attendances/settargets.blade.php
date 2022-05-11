@@ -36,11 +36,10 @@
                                 <thead class="bg-primary text-white">
                                     <tr>
                                         <th>#</th>
-                                        <th>YEAR</th>
-                                        <th>QUARTER</th>
-                                        <th>EFFICIENCY TARGET</th>
-                                        <th>ABSENTIEESM TARGET</th>
-                                        <th>ACTION</th>
+                                        <th class="text-center">MONTH</th>
+                                        <th class="text-center">EFFICIENCY TARGET</th>
+                                        <th class="text-center">ABSENTIEESM TARGET</th>
+                                        <th class="text-center">ACTION</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -48,11 +47,10 @@
                                         @foreach ($targets as $pl)
                                         <tr>
                                             <td>{{'#'}}</td>
-                                            <td>{{$pl->year}}</td>
-                                            <td>{{$pl->yearquarter}}</td>
-                                            <td>{{$pl->efficiency}}</td>
-                                            <td>{{$pl->absentieesm}}</td>
-                                            <td>
+                                            <td  class="text-center">{{\Carbon\Carbon::createFromFormat('Y-m-d',$pl->month)->format('F Y');}}</td>
+                                            <td  class="text-center">{{$pl->efficiency}}</td>
+                                            <td  class="text-center">{{$pl->absentieesm}}</td>
+                                            <td  class="text-center">
                                                 <a href="{{route('destroytag', $pl->id)}}"
                                                     class="btn btn-outline-danger btn-sm pull-right deltarget"><i
                                                     class="fa fa-trash"></i></a>

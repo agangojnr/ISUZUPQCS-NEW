@@ -45,20 +45,6 @@ class HomeController extends Controller
     {
 
 
-       /*$vehis = Unitmovement::where([['shop_id ',11],['std_hrs',null],['current_shop',0]])->get(['vehicle_id']);
-foreach($vehis as $veh){
-    $modelid = vehicle_units::where('id',$veh->vehicle_id)->value('model_id');
-    $stdhrs = Std_working_hr::where([['model_id',$modelid],['shop_id',11]])->value('std_hors');
-
-    $update = Unitmovement::where([['shop_id',11],['vehicle_id',$veh->vehicle_id]])->first();
-    $update->std_hrs = $stdhrs;
-    $update->save();
-}
-
-return $update;*/
-
-
-			//dd(month_to_date_drr(10));
     //DRR Month to Date
         $today=Carbon::now();
         $startDate = Carbon::now(); //returns current day
@@ -334,8 +320,8 @@ $firstthismonth = Carbon::now()->startOfMonth()->format('Y-m-d');
 $firstthismonthY = Carbon::create($yesterday)->startOfMonth()->format('Y-m-d');
 $shops = Shop::where('check_shop','=','1')->get(['id','report_name']);
 
-$plantabb = getTarget($yesterday)->absentieesm;
-$efftag = getTarget($yesterday)->efficiency;
+$plantabb = (getTarget($yesterday)=='0')? 0 : getTarget($yesterday)->absentieesm;
+$efftag = (getTarget($yesterday)=='0')? 0 : getTarget($yesterday)->efficiency;
 $planttlav = getplantTLAtarget();
 
 //EFFICIENCY
@@ -344,43 +330,15 @@ $master['efftag'] = round($efftag,0);
 
 
 //ABSENTIEESM
-$allschdates = Production_target::whereBetween('date',[$firstthismonthY,$yesterday])
-                    ->groupby('date')->get(['date']);
-$tthours = 0;
-$ttattend = 0;
-foreach($allschdates as $schdt){
-    $hrs = Attendance::where('date', '=', $schdt->date)
-                ->sum(DB::raw('direct_hrs + indirect_hrs + loaned_hrs'));
-    $tthours += $hrs;
-    $noofemp = Attendance::where('date','=', $schdt->date)->count();
-    $ttattend += $noofemp;
-}
-
-    $exphrs = $ttattend*8;
-
-    $absent = $exphrs - $tthours;
-
-    ($absent > 0) ? $absentiesm = round((($absent/$exphrs)*100),2) : $absentiesm = 0;
-
-    $master['absentiesm'] = round($absentiesm,2);
-    $master['plantabb'] = round($plantabb,0);
+$master['absentiesm'] = getAbsenteeism($firstthismonthY, $yesterday);
+$master['plantabb'] = round($plantabb,0);
 
 
 //TEAMLEADER AVAILABILITY
-    $direct =  DB::table('attendances')
-        ->join('employees', 'employees.id', '=', 'attendances.staff_id')
-        ->whereBetween('date', [$firstthismonthY, $yesterday])->where('team_leader','=','yes')
-        ->sum(DB::raw('direct_hrs'));
-    $indirect =  DB::table('attendances')
-        ->join('employees', 'employees.id', '=', 'attendances.staff_id')
-        ->whereBetween('date', [$firstthismonthY, $yesterday])->where('team_leader','=','yes')
-        ->sum(DB::raw('indirect_hrs + loaned_hrs'));
+$MTDTLavail = getTLavailability($firstthismonthY, $yesterday);;
 
-$tthrs = ($indirect+$direct == 0) ? 1 : $indirect+$direct;
 
-$TLavail = ($tthrs != 1) ? round(($indirect/$tthrs)*100,2) : '--';
-
-$master['TLavail'] = round($TLavail,2);
+$master['TLavail'] = round($MTDTLavail,2);
 $master['planttlav'] = round($planttlav,0);
 
 
@@ -407,12 +365,13 @@ $cvid = GcaScore::where('lcv_cv','=','cv')->max('id'); $lcvid = GcaScore::where(
 $master['cvwdpv'] = round(GcaScore::where('id','=',$cvid)->value('mtdwdpv'),0);
 $master['lcvwdpv'] = round(GcaScore::where('id','=',$lcvid)->value('mtdwdpv'),0);
 
-$cvdefects = GcaScore::where('id','=',$cvid)->sum(DB::raw('defectcar1 + defectcar1'));
-$lcvdefects = GcaScore::where('id','=',$lcvid)->sum(DB::raw('defectcar1 + defectcar1'));
+$cvdefects = GcaScore::whereBetween('date',[$first, $today])->where('lcv_cv','=','cv')->sum(DB::raw('defectcar1 + defectcar2'));
+$lcvdefects = GcaScore::whereBetween('date',[$first, $today])->where('lcv_cv','=','lcv')->sum(DB::raw('defectcar1 + defectcar2'));
+$cvsample = GcaScore::whereBetween('date',[$first, $today])->where('lcv_cv','=','cv')->sum('units_sampled');
+$lcvsample = GcaScore::whereBetween('date',[$first, $today])->where('lcv_cv','=','lcv')->sum('units_sampled');
 
-
-$master['cvdpv'] = round(($cvdefects/GcaScore::where('id','=',$cvid)->value('units_sampled')),0);
-$master['lcvdpv'] = round(($lcvdefects/GcaScore::where('id','=',$lcvid)->value('units_sampled')),0);
+$master['cvdpv'] = ($cvsample == 0) ? 0 : round(($cvdefects/$cvsample),0);
+$master['lcvdpv'] = ($lcvsample == 0) ? 0 : round(($lcvdefects/$lcvsample),0);
 
 $master['cvdpvtarget'] = (getGCATarget($today) == '0') ? 0 : round(getGCATarget($today)->cvdpv,1);
 $master['cvwdpvtarget'] = (getGCATarget($today) == '0') ? 0 : round(getGCATarget($today)->cvwdpv,1);

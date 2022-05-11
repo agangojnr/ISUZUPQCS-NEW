@@ -28,12 +28,9 @@ class AppUsersController extends Controller
 
        public function __construct(MessageUtil $messageUtil)
     {
-   
+
         $this->messageUtil = $messageUtil;
     }
-
-
-
 
     public function index()
     {
@@ -56,10 +53,10 @@ class AppUsersController extends Controller
 
 
 
-    
+
 
      ->make(true);
-       
+
 
     }
 
@@ -87,15 +84,15 @@ class AppUsersController extends Controller
      */
     public function store(Request $request)
     {
-        
+
          $validator = Validator::make($request->all(), [
             'email' => 'bail|required|email|unique:appusers,email',
             'username' => 'bail|required|unique:appusers,username',
             'name' => 'bail|required',
             'phone_no' => 'bail|required|unique:appusers,phone_no',
             'device_token' => 'bail|required|unique:appusers,device_token',
-            
-            
+
+
         ]);
 
 
@@ -104,45 +101,45 @@ class AppUsersController extends Controller
     if ($validator->fails()) {
 
        $output = ['success' => false,
-                            'msg' => "It appears you have forgotten to complete something",
-                            ];
-                            
+        'msg' => "It appears you have forgotten to complete something",
+        ];
     }
+
+    $data['id'] = Appuser::max('id') + 1;
    $data = $request->only(['email','device_token', 'username', 'name', 'phone_no','shop_id']);
    $data['status'] = 1;
      // Check validation success
    $password=Str::random(4);
      $data['password'] = $password;
-  
+
+
     if ($validator->passes()) {
 
          if (request()->ajax()) {
             try {
-                      
-             $data = Appuser::create($data);    
+
+             $data = Appuser::create($data);
 
              if($data){
 
             $token = $data->createToken('user')->accessToken;
             $data['token'] = $token;
-            
-            
 
              $message ='Your have been successfully registed to ISUZU PQCS system your username is : '.$request->username.' and password is : '.$password .'';
-           $this->messageUtil->sendMessage($request->phone_no,$message);
-             }       
-              
+             $this->messageUtil->sendMessage($request->phone_no,$message);
+             }
+
                 $output = ['success' => true,
                             'msg' => "User Created Successfully"
                         ];
             } catch (\Exception $e) {
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-                    
+
                 $output = ['success' => false,
                             'msg' => $e->getMessage(),
                             ];
             }
-           
+
         }
 
     }
@@ -164,13 +161,13 @@ class AppUsersController extends Controller
 
       DB::beginTransaction();
 
-      $user = Appuser::find($id); 
+      $user = Appuser::find($id);
 
          $password=Str::random(4);
-        
 
-        
-        
+
+
+
 
 
          $message ='Your Password has been successfully reset, your username is : '.$user->username.' and password is : '.$password .'';
@@ -184,12 +181,12 @@ class AppUsersController extends Controller
                             ];
 
 
-               
+
 
             } catch (\Exception $e) {
                 DB::rollBack();
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-                
+
                 $output = ['success' => false,
                                 'msg' => "Something Went Wrong"
                             ];
@@ -201,7 +198,7 @@ class AppUsersController extends Controller
 
 
 
-        
+
     }
 
 
@@ -226,7 +223,7 @@ class AppUsersController extends Controller
     {
         $id=decrypt_data($id);
 
-         $user = Appuser::find($id); 
+         $user = Appuser::find($id);
         $shops = Shop::where('check_point', 1)
                             ->pluck('shop_name', 'id');
         return view('appusers.edit')->with(compact('shops','user'));
@@ -247,7 +244,7 @@ class AppUsersController extends Controller
             'name' => 'bail|required',
             'phone_no' => 'bail|required',
             'device_token' => 'bail|required',
-            
+
         ]);
 
 
@@ -258,33 +255,33 @@ class AppUsersController extends Controller
        $output = ['success' => false,
                             'msg' => "It appears you have forgotten to complete something",
                             ];
-                            
+
     }
    $data = $request->only(['email','device_token', 'username', 'name', 'phone_no','shop_id']);
-   
-  
+
+
     if ($validator->passes()) {
 
          if (request()->ajax()) {
             try {
-                      
 
 
-            $result = Appuser::find($id); 
+
+            $result = Appuser::find($id);
             $result->update($data);
             $result->touch();
-             
+
            $output = ['success' => true,
                             'msg' => "User Updated Successfully"
                         ];
             } catch (\Exception $e) {
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-                    
+
                 $output = ['success' => false,
                             'msg' => $e->getMessage(),
                             ];
             }
-           
+
         }
 
     }
@@ -303,7 +300,7 @@ class AppUsersController extends Controller
     {
          if (request()->ajax()) {
             try {
-               
+
 
                 $can_be_deleted = true;
                 $error_msg = '';
@@ -314,11 +311,11 @@ class AppUsersController extends Controller
                //do logic here
 
                 $id=decrypt_data($id);
-  
+
                 $items = Appuser::where('id', $id)
                            ->first();
-        
-            
+
+
 
                 if ($can_be_deleted) {
                     if (!empty($items)) {
@@ -339,7 +336,7 @@ class AppUsersController extends Controller
             } catch (\Exception $e) {
                 DB::rollBack();
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-                
+
                 $output = ['success' => false,
                                 'msg' => "Something Went Wrong"
                             ];
@@ -351,15 +348,15 @@ class AppUsersController extends Controller
 
       public function login (Request $request) {
 
-   
+
           $request->validate([
             'username' => 'bail|required',
             'password' => 'bail|required|min:4',
         ]);
         $user = AppUser::where('username', $request->username)->first();
- 
+
         if ($user && Hash::check($request->password, $user->password)) {
-          
+
             if ($user['status'] == 0) {
                 return response()->json(['msg' => 'You account is inactive contact admin for activation', 'data' => null, 'success' => false], 200);
             }

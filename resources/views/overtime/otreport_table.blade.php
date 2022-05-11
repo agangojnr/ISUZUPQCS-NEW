@@ -42,6 +42,7 @@
     <thead>
         <tbody style="color: black;">
             @foreach ($emps as $emp)
+            @if ($removestaff[$emp->id] == 0)
             <tr>
                 <td class="normal text-white">{{$loop->iteration}}.</td>
                 <td class="normal text-white">{{$emp->staff_no}}</td>
@@ -70,7 +71,9 @@
                 <td class="normal"></td>
 
             </tr>
+            @endif
             @endforeach
+
             <tr>
                 <td></td>
                 <td></td><td></td>

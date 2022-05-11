@@ -48,7 +48,7 @@
     <div class="container-fluid">
   <div class="content-header row pb-1">
                 <div class="content-header-left col-md-6 col-12 mb-2">
-                   
+
 
                 </div>
                 <div class="content-header-right col-md-6 col-12">
@@ -66,22 +66,14 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-
-
+                <div class="card-body">
+                {{ Form::open(['route' => 'vehiclemodels.store',
+                'class' => 'form-material mt-4', 'role' => 'form', 'method' => 'post', 'id' => 'create-model'])}}
 
                 <div class="card-body">
-                     {{ Form::open(['route' => 'vehiclemodels.store', 'class' => 'form-material mt-4', 'role' => 'form', 'method' => 'post', 'id' => 'create-model'])}}
 
+                @include('unitmodel.form')
 
-
-
-                
-                <div class="card-body">
-
-
-            @include('unitmodel.form')
-
-          
                 <div class="card-body">
                     <div class="form-group mb-0 text-right">
                         {{ Form::submit('Save', ['class' => 'btn btn-info btn-md']) }}
@@ -106,8 +98,8 @@
     {{ Html::style('assets/extra-libs/toastr/dist/build/toastr.min.css') }}
 
 
-     
-    
+
+
 @endsection
 
 
@@ -116,46 +108,46 @@
 
 {{ Html::script('assets/extra-libs/toastr/dist/build/toastr.min.js') }}
 
-    
+
 
 <script type="text/javascript">
-     
- $(document).on('submit', 'form#create-model', function(e){
-            e.preventDefault();
-            //var data = $(this).serialize();
-            $("#submit-data").hide();
-            $.ajax({
-                method: "post",
-                url: $(this).attr("action"),
-                data:  new FormData(this),
-               contentType: false,
-               cache: false,
-               processData:false,
-                success:function(result){
-                    if(result.success == true){
-                        //$('div.account_model').modal('hide');
-                        toastr.success(result.msg);
-                       // capital_account_table.ajax.reload();
-                        //other_account_table.ajax.reload();
 
-                        location.href = '{{ route("vehiclemodels.index") }}';
-                    }else{
-                         $("#submit-data").show();
-                        toastr.error(result.msg);
-                    }
-                }
-            });
-        });
+$(document).on('submit', 'form#create-model', function(e){
+    e.preventDefault();
+    //var data = $(this).serialize();
+    $("#submit-data").hide();
+    $.ajax({
+        method: "post",
+        url: $(this).attr("action"),
+        data:  new FormData(this),
+        contentType: false,
+        cache: false,
+        processData:false,
+        success:function(result){
+            if(result.success == true){
+                //$('div.account_model').modal('hide');
+                toastr.success(result.msg);
+                // capital_account_table.ajax.reload();
+                //other_account_table.ajax.reload();
 
-
+                location.href = '{{ route("vehiclemodels.index") }}';
+            }else{
+                    $("#submit-data").show();
+                toastr.error(result.msg);
+            }
+        }
+    });
+});
 
 
 
 
 
 
-    
+
+
+
 </script>
 
-  
+
     @endsection

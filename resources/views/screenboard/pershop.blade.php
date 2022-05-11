@@ -320,13 +320,12 @@
 
             function runningTime() {
                 $.ajax({
-                        url: '{{route('screenboardpershopReload')}}',
+                        url: '{{route('timer')}}',
                         method: "GET",
                         dataType: 'json',
                         data:{'section':"{{$_GET['section']}}",'shift':"{{$_GET['shift']}}"},
                         success: function(response) {
                             $('#time').html(response.data.time);
-							console.log("");
                     }
                 });
             }
@@ -338,7 +337,7 @@
             refresher();
          setInterval(function () {
             refresher();
-         }, 3000);
+         }, 300000);
      });
 
 

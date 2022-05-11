@@ -31,11 +31,7 @@
                     <!-- ============================================================== -->
                     <a class="navbar-brand" href="/home">
                         <!-- Logo icon -->
-                        <b class="logo-icon">
-                            <!--You can put here icon as well // <i class="wi wi-sunset"></i> //-->
-                            <!-- Dark Logo icon -->
-                            PQCS
-                        </b>
+                        <img src="assets\images\logo3.png" alt="">
                         <!--End Logo icon -->
                         <!-- Logo text -->
                         <span class="logo-text">
@@ -88,7 +84,7 @@
                     <!-- Right side toggle and nav items -->
                     <!-- ============================================================== -->
                     <ul class="navbar-nav float-right">
-                         
+
                     @include('status.index')
 
                         <li class="nav-item dropdown">
@@ -101,8 +97,8 @@
                                     <li>
                                         <div class="dw-user-box p-3 d-flex">
                                             <div class="u-img"><img src="../assets/images/users/user3.jpg" alt="user" class="rounded" width="80"></div>
-                                            <div class="u-text ml-2">                                                
-                                                <label class="badge badge-success">{{getuserrole();}}</label>                                                 
+                                            <div class="u-text ml-2">
+                                                <label class="badge badge-success">{{getuserrole();}}</label>
                                                  <h4 class="mb-0">{{Auth()->User()->name}}</h4>
                                                 <p class="text-muted mb-1 font-14">{{Auth()->User()->email}}</p>
                                                 <a href="javascript:void(0)" class="btn btn-rounded btn-danger btn-sm text-white d-inline-block">

@@ -78,11 +78,10 @@
                         'method'=>'post', 'enctype' => 'multipart/form-data']); !!}
                         <div class="row">
                             <div class="col-4">
-                                <h4 class="card-title">Filter Schedule</h4>
-                            <div class='input-group'>
-                                <input type="text" name="mdate" id="datepicker" class="form-control bg-white" readonly
+                            <label>Filter by Month:</label>
+                            <div class="input-group">
+                                <input type="text" name="mdate" class="form-control form-control-1 input-sm from bg-white" readonly
                                 value="{{\Carbon\Carbon::createFromFormat('Y-m-d', $first)->format('F Y')}}" autocomplete="off" />
-
                                 <div class="input-group-append">
                                     <span class="input-group-text">
                                         <span class="ti-calendar"></span>
@@ -92,7 +91,7 @@
 
                         </div>
                         <div class="col-2">
-                            <button type="submit" class="btn btn-success mt-4">Apply Filter</button>
+                            <button type="submit" class="btn btn-success mt-4"><i class="mdi mdi-filter"></i> Filter Data</button>
                         </div>
                         <div class="col-6">
 
@@ -148,7 +147,7 @@
                                         <tr>
                                             <td class="text-white">{{$x++}}</td>
                                             <td class="text-white">
-                                                    {{$routes[$n]}}                                                
+                                                    {{$routes[$n]}}
                                             </td>
                                             @for ($i = 0; $i < count($dates); $i++)
                                                 <td style="font-size: 14px;" id="units_{{$dateid[$i]}}_{{$n}}" class="units" data-editable>
@@ -209,15 +208,10 @@
         $(".select2").select2();
     </script>
     <script type="text/javascript">
-    $(function(){
-        var today = new Date();
-        $("#datepicker").datepicker({
-            showDropdowns: true,
+      $('.from').datepicker({
+            autoclose: true,
+            minViewMode: 1,
             format: "MM yyyy",
-            viewMode: "years",
-            minViewMode: "months",
-            maxDate: today,
-            });
         });
 
 

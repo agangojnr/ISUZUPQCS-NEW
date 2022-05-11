@@ -68,7 +68,7 @@
         </li>
         @endif
 
-        @if(Auth()->User()->can('Effny-dashboard') || Auth()->User()->can('performance-tack') || Auth()->User()->can('buffer-status') || Auth()->User()->can('actual-production') || Auth()->User()->can('qualityrpt-position'))
+        @if(Auth()->User()->can('Effny-dashboard') || Auth()->User()->can('performance-tack') || Auth()->User()->can('buffer-status') || Auth()->User()->can('actual-production') || Auth()->User()->can('qualityrpt-position') || Auth()->User()->can('pos-track'))
             <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark"
                 href="javascript:void(0)" aria-expanded="false"><i
                     class="fas fa-chart-bar"></i><span class="hide-menu">Reports</span></a>
@@ -109,6 +109,13 @@
                                 Delayed Units</span></a>
                         </li>
                         @endcan
+                        @can('pos-track')
+                        <li class="sidebar-item"><a href="{{route('dashboard')}}" class="sidebar-link"><i
+                            class="mdi mdi-av-timer"></i> <span class="hide-menu">
+                                WIP Tracking</span></a>
+                        </li>
+                        @endcan
+
                     </ul>
                 </li>
             @endif
@@ -216,7 +223,7 @@
                     </ul>
                 </li>
             @endif
-			
+
 			@if(Auth()->User()->can('drltgt-list') || Auth()->User()->can('drltgt-create')|| Auth()->User()->can('drrtgt-list')|| Auth()->User()->can('drrtgt-create') || Auth()->User()->can('mangca-target') || Auth()->User()->can('gcatgt-create'))
                 <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark"
                     href="javascript:void(0)" aria-expanded="false"><i
@@ -260,7 +267,7 @@
     @endif
 
 
-    @if(Auth()->User()->can('attendance-mark') || Auth()->User()->can('attendance-preview') || Auth()->User()->can('overtime-report') || Auth()->User()->can('set-default') || Auth()->User()->can('manage-target') || Auth()->User()->can('view-target')|| Auth()->User()->can('set-stdhrs') || Auth()->User()->can('hc-summary') || Auth()->User()->can('hc-list') || Auth()->User()->can('hc-import') || Auth()->User()->can('set-default') || Auth()->User()->can('manage-target') || Auth()->User()->can('view-target')|| Auth()->User()->can('set-stdhrs'))
+    @if(Auth()->User()->can('attendance-mark') || Auth()->User()->can('attendance-preview') || Auth()->User()->can('overtime-report') || Auth()->User()->can('set-default') || Auth()->User()->can('manage-target') || Auth()->User()->can('view-target')|| Auth()->User()->can('set-stdhrs') || Auth()->User()->can('hc-summary') || Auth()->User()->can('hc-list') || Auth()->User()->can('hc-import') || Auth()->User()->can('set-default') || Auth()->User()->can('manage-target') || Auth()->User()->can('view-target')|| Auth()->User()->can('set-stdhrs')|| Auth()->User()->can('bulk-auth'))
         <li class="nav-small-cap"><i class="mdi mdi-dots-horizontal"></i>
         <span class="hide-menu">People</span></li>
         @can('attendance-mark')
@@ -270,8 +277,13 @@
         @endcan
         @can('overtime-preview')
         <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link"
-            href="/attendancepreview" aria-expanded="false"><i class="mdi mdi-av-timer"></i><span
-                class="hide-menu">Authorization OT</span></a></li>
+             href="{{route('bulkauth')}}" aria-expanded="false"><i class="mdi mdi-av-timer"></i><span
+                class="hide-menu">OT Authorization</span></a></li>
+        @endcan
+        @can('bulk-auth')
+        <li class="sidebar-item"> <a class="sidebar-link waves-effect waves-dark sidebar-link"
+            href="{{route('testing')}}" aria-expanded="false"><i class="mdi mdi-ticket-confirmation"></i><span
+                class="hide-menu">Test View</span></a></li>
         @endcan
         @if(Auth()->User()->can('hc-summary') || Auth()->User()->can('hc-list') || Auth()->User()->can('hc-import'))
         <li class="sidebar-item"> <a class="sidebar-link has-arrow waves-effect waves-dark"
@@ -370,8 +382,30 @@
             </ul>
         </li>
     @endif
+    @endif
 
 
+    @if(Auth()->User()->can('response-summary') || Auth()->User()->can('people-summary') || Auth()->User()->can('quality-summary'))
+        <li class="nav-small-cap"><i class="mdi mdi-dots-horizontal"></i>
+                <span class="hide-menu">Summary Graphs</span></li>
+        @can('people-summary')
+            <li class="sidebar-item"><a href="{{route('yrpeoplesummary')}}" class="sidebar-link"><i
+                class="mdi mdi-chart-histogram"></i> <span class="hide-menu">
+                    People Graphs</span></a>
+            </li>
+        @endcan
+        @can('quality-summary')
+            <li class="sidebar-item"><a href="{{route('yrqualitysummary')}}" class="sidebar-link"><i
+                class="mdi mdi-chart-histogram"></i> <span class="hide-menu">
+                    Quality Graphs</span></a>
+            </li>
+        @endcan
+        @can('response-summary')
+            <li class="sidebar-item"><a href="{{route('yrresponsesummary')}}" class="sidebar-link"><i
+                class="mdi mdi-chart-areaspline"></i> <span class="hide-menu">
+                    Response Graphs</span></a>
+            </li>
+        @endcan
     @endif
 
 

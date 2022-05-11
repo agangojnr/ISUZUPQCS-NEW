@@ -15,7 +15,7 @@
         var crsf_token = 'csrf-token';
         var crsf_hash = '{{ csrf_token() }}';
         window.Laravel = {!! json_encode([ 'csrfToken' => csrf_token() ]) !!};
-       
+
     </script>
 
  <link rel="canonical" href="https://www.wrappixel.com/templates/xtremeadmin/" />
@@ -28,7 +28,9 @@
      <link href="{{asset('assets/libs/tablesaw/dist/tablesaw.css')}} " rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{{asset('dist/css/style.css ')}}" rel="stylesheet">
+
     <link href="{{asset('assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.css')}}" rel="stylesheet">
+
     <style>
         td.details-control {
             background: url("{{asset('dist/js/pages/datatable/details_open.png')}}") no-repeat center center;
@@ -42,12 +44,12 @@
 
 
       <!-- people -->
-   
+
     <link rel="stylesheet" type="text/css" href="{{asset('assets/libs/pickadate/lib/themes/default.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('assets/libs/pickadate/lib/themes/default.date.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('assets/libs/pickadate/lib/themes/default.time.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('assets/libs/daterangepicker/daterangepicker.css')}}">
- 
+
 
     <link rel="stylesheet" type="text/css" href="{{asset('assets/libs/pickadate/lib/themes/default.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('assets/libs/pickadate/lib/themes/default.date.css')}}">

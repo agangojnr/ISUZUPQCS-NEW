@@ -58,17 +58,18 @@
                         </div>
                         <div class="col-sm-2"></div>
 
-                        <div class="col-sm-2"></div>
+                        <div class="col-sm-2"><h4 class="float-right">Month:</h4></div>
                         <div class="col-sm-4">
                             <div class='input-group'>
-                                <select name="yearquarter" id="" class="form-control select2" required="required" style="width:100%;">
-                                    <option value="">Choose Year Quarter</option>
-                                    @for ($i = 0; $i < count($years); $i++)
-                                        @for ($n = 0; $n < count($quarters); $n++)
-                                            <option value="{{$years[$i]}}-{{$n+1}}">{{$years[$i]}} - {{$quarters[$n]}}</option>
-                                        @endfor
-                                    @endfor
-                                </select>
+                                <div class="input-group">
+                                    <input type="text" required name="month" class="form-control form-control-1 input-sm from bg-white" readonly
+                                    value="{{$selectedmonth}}" autocomplete="off" />
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <span class="ti-calendar"></span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="col-sm-4">
@@ -82,13 +83,15 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered datatable-select-inputs">
-                            <thead>
+                    <div class="card-block">
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead class="bg-primary text-white">
 
                                 <tr>
-                                    <th>Year</th>
-                                    <th>Quarter</th>
+                                    <th>#</th>
+                                    <th>Month</th>
                                     <th>CV DPV Target</th>
                                     <th>CV WDPV Target</th>
                                     <th>LCV DPV Target</th>
@@ -100,8 +103,8 @@
                                 @if ($gcatargts != "")
                                     @foreach ($gcatargts as $item)
                                     <tr>
-                                        <td>{{$item->year}}</td>
-                                        <td>{{$item->yearquarter}}</td>
+                                        <td>{{$loop->iteration}}</td>
+                                        <td>{{\Carbon\Carbon::createFromFormat('Y-m-d',$item->month)->format('F Y');}}</td>
                                         <td>{{$item->cvdpv}}</td>
                                         <td>{{$item->cvwdpv}}</td>
                                         <td>{{$item->lcvdpv}}</td>
@@ -117,20 +120,10 @@
                                 @endif
 
                             </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>Year</th>
-                                    <th>Quarter</th>
-                                    <th>CV DPV Target</th>
-                                    <th>LCV WDPV Target</th>
-                                    <th>CV DPV Target</th>
-                                    <th>LCV WDPV Target</th>
-                                    <th>Action</th>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -139,6 +132,7 @@
     {{ Html::style('assets/libs/select2/dist/css/select2.min.css') }}
     {{ Html::style('assets/extra-libs/toastr/dist/build/toastr.min.css') }}
     {{ Html::style('assets/libs/sweetalert2/dist/sweetalert2.min.css') }}
+    {{ Html::style('assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css') }}
     @endsection
 
     @section('after-scripts')
@@ -147,11 +141,16 @@
     {{ Html::script('assets/libs/select2/dist/js/select2.full.min.js') }}
     {{ Html::script('assets/libs/select2/dist/js/select2.min.js') }}
     {{ Html::script('assets/libs/sweetalert2/dist/sweetalert2.all.min.js') }}
+    {{ Html::script('assets/libs/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}
     <script>
          $(".select2").select2();
     </script>
      <script>
-
+            $('.from').datepicker({
+                autoclose: true,
+                minViewMode: 1,
+                format: "MM yyyy",
+            });
 
         $(document).on('click', '.deltarget', function(e){
 

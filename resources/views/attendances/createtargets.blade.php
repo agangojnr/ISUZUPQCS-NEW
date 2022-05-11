@@ -11,7 +11,7 @@
     <!-- ============================================================== -->
     <div class="row page-titles">
         <div class="col-md-5 col-12 align-self-center">
-            <h3 class="text-themecolor mb-0">PRODUCTION TARGETS</h3>
+            <h4 class="text-themecolor mb-0">PRODUCTION TARGETS</h4>
             <ol class="breadcrumb mb-0 p-0 bg-transparent">
                 <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
                 <li class="breadcrumb-item active">SET TARGETS</li>
@@ -34,25 +34,25 @@
             <div class="card">
                     <div class="card-body">
                         <div class="card-block">
-                            <h4>SET PRODUCTION TARGETS</h4>
+                            <h6>SET PRODUCTION TARGETS</h6>
                             <form action="{{ route('savetargets') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                             <div class="row">
-
-                                <div class="col-4"></div>
-                                <label for="description" class="col-sm-2 text-right control-label col-form-label">Target Date Range:</label>
+                                <div class="col-3"></div>
+                                <label for="description" class="col-sm-2 text-right control-label col-form-label">Choose Month:</label>
                                 <div class="col-6">
-                                    <div class='input-group'>
-                                        <select name="yearquarter" id="" class="form-control select2" required="required" style="width:100%;">
-                                            <option value="">Choose Year Quarter</option>
-                                            @for ($i = 0; $i < count($years); $i++)
-                                                @for ($n = 0; $n < count($quarters); $n++)
-                                                    <option value="{{$years[$i]}}-{{$n+1}}">{{$years[$i]}} - {{$quarters[$n]}}</option>
-                                                @endfor
-                                            @endfor
-                                        </select>
+
+                                    <div class="input-group">
+                                        <input type="text" required name="month" class="form-control form-control-1 input-sm from bg-white" readonly
+                                        value="{{$selectedmonth}}" autocomplete="off" />
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">
+                                                <span class="ti-calendar"></span>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="col-1"></div>
                             </div>
                             <hr>
                             <div class="form-group col-md-12">
@@ -93,11 +93,10 @@
                                         <thead class="bg-primary text-white">
                                             <tr>
                                                 <th>#</th>
-                                                <th>YEAR</th>
-                                                <th>QUARTER</th>
-                                                <th>EFFICIENCY TARGET</th>
-                                                <th>ABSENTIEESM TARGET</th>
-                                                <th>ACTION</th>
+                                                <th class="text-center">MONTH</th>
+                                                <th class="text-center">EFFICIENCY TARGET</th>
+                                                <th class="text-center">ABSENTIEESM TARGET</th>
+                                                <th class="text-center">ACTION</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -105,11 +104,10 @@
                                                 @foreach ($thisyeartargets as $pl)
                                                 <tr>
                                                     <td>{{'#'}}</td>
-                                                    <td>{{$pl->year}}</td>
-                                                    <td>{{$pl->yearquarter}}</td>
-                                                    <td>{{$pl->efficiency}}</td>
-                                                    <td>{{$pl->absentieesm}}</td>
-                                                    <td>
+                                                    <td class="text-center">{{\Carbon\Carbon::createFromFormat('Y-m-d',$pl->month)->format('F Y');}}</td>
+                                                    <td class="text-center">{{$pl->efficiency}}</td>
+                                                    <td class="text-center">{{$pl->absentieesm}}</td>
+                                                    <td class="text-center">
                                                         <a href="{{route('destroytag', $pl->id)}}"
                                                             class="btn btn-outline-danger btn-sm pull-right deltarget"><i
                                                             class="fa fa-trash"></i></a>
@@ -137,6 +135,7 @@
         {{ Html::style('assets/libs/select2/dist/css/select2.min.css') }}
         {{ Html::style('assets/extra-libs/toastr/dist/build/toastr.min.css') }}
         {{ Html::style('assets/libs/sweetalert2/dist/sweetalert2.min.css') }}
+        {{ Html::style('assets/libs/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css') }}
         @endsection
 
         @section('after-scripts')
@@ -145,10 +144,18 @@
         {{ Html::script('assets/libs/select2/dist/js/select2.full.min.js') }}
         {{ Html::script('assets/libs/select2/dist/js/select2.min.js') }}
         {{ Html::script('assets/libs/sweetalert2/dist/sweetalert2.all.min.js') }}
+        {{ Html::script('assets/libs/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}
         {!! Toastr::message() !!}
 
 
         <script type="text/javascript">
+            $('.from').datepicker({
+                autoclose: true,
+                minViewMode: 1,
+                format: "MM yyyy",
+            });
+
+
             $(".select2").select2();
 
             $(document).on('click', '.deltarget', function(e){

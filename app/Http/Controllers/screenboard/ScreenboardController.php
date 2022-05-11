@@ -36,13 +36,6 @@ class ScreenboardController extends Controller
     }
 
      public function screenboardindex(Request $request){
-
-        /*return Employee::where([['team_leader','=','yes'],['status','=','Active']])->with(['attendance'=>function($quey) use ($firstthismonth, $today) {
-            $quey->whereBetween('date', [$firstthismonth, $today]);}])->get('attendance:othours');//->sum('indirect_hrs');
-
-        $tls = Employee::where('team_leader','=','yes')->find('id');
-        return $hours = $tls->attendance()->get()->sum('id');*/
-
         $section = $request->input('section');
         $shifthrs = $request->input('shift');
         $today = carbon::today()->format('Y-m-d');
@@ -51,19 +44,12 @@ class ScreenboardController extends Controller
         $firstthismonthY = Carbon::create($yesterday)->startOfMonth()->format('Y-m-d');
 
         $efshops = Shop::where('check_shop','=','1')->get(['report_name','id']);
-         unset($efshops[9]);
 
         if($section == 'plant'){$sectionname = "PLANT";
         //PLANT SCREEN
 
         //Plant efficiency TODAY
-        $tddrhrs = Attendance::where('date','=',$yesterday)->sum(DB::raw('efficiencyhrs'));
-        $tdlnhrs = Attendance::where('date','=',$yesterday)->sum(DB::raw('loaned_hrs'));
-        $tdotlnhrs = Attendance::where('date','=',$yesterday)->sum(DB::raw('otloaned_hrs'));
-        $TDinput = $tddrhrs + $tdlnhrs + $tdotlnhrs;
-
-        $TDoutput = Unitmovement::where('datetime_out','=',$yesterday)->sum('std_hrs');
-        $TDplant_eff = ($TDinput > 0) ? round(($TDoutput/$TDinput)*100,0) : 0;
+        $TDplant_eff =  getPlantEfficiency($yesterday, $yesterday);//($TDinput > 0) ? round(($TDoutput/$TDinput)*100,0) : 0;
 
         //MTD EFFICIENCY
         $MTDplant_eff = getPlantEfficiency($firstthismonthY, $yesterday);//($MTDinput > 0) ? round(($MTDoutput/$MTDinput)*100,0) : 0;
@@ -90,12 +76,13 @@ class ScreenboardController extends Controller
         $cvwdpv = round(GcaScore::where('id','=',$cvid)->value('mtdwdpv'),2);
         $lcvwdpv = round(GcaScore::where('id','=',$lcvid)->value('mtdwdpv'),2);
 
-        $cvdefects = GcaScore::where('id','=',$cvid)->sum(DB::raw('defectcar1 + defectcar1'));
-        $lcvdefects = GcaScore::where('id','=',$lcvid)->sum(DB::raw('defectcar1 + defectcar1'));
+        $cvdefects = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','cv')->sum(DB::raw('defectcar1 + defectcar2'));
+        $lcvdefects = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','lcv')->sum(DB::raw('defectcar1 + defectcar2'));
+        $cvsample = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','cv')->sum('units_sampled');
+        $lcvsample = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','lcv')->sum('units_sampled');
 
-
-        $cvdpv = round(($cvdefects/GcaScore::where('id','=',$cvid)->value('units_sampled')),2);
-        $lcvdpv = round(($lcvdefects/GcaScore::where('id','=',$lcvid)->value('units_sampled')),2);
+        $cvdpv = ($cvsample == 0) ? 0 : round(($cvdefects/$cvsample),2);
+        $lcvdpv = ($lcvsample == 0) ? 0 : round(($lcvdefects/$lcvsample),2);
 
 
         $cvdpvtarget = (getGCATarget($today) == '0')? 0 : round(getGCATarget($today)->cvdpv,1);
@@ -118,7 +105,6 @@ class ScreenboardController extends Controller
             $plantTThrs += $indirect+$direct;
             $plantindirect += $indirect;
         }
-
         $TDTLavail = ($plantTThrs > 0) ? round(($plantindirect/$plantTThrs)*100,0) : 0;
 
         //MTD T/L Availability
@@ -137,26 +123,34 @@ class ScreenboardController extends Controller
         $MTDTLavail = ($plantTThrs == 0) ? 0 : round(($plantdirect/$plantTThrs)*100,2);
         $plantTL_target = round(getplantTLAtarget(),0);
 
-        //ABSENTEEISM
+       //ABSENTEEISM
         //Yesterday absenteeism
-        $empcount = Attendance::where('date','=',$yesterday)->count();
-        //if($empcount != null){
-            $expectedhrs = $empcount * 8;
-            $hrsworked = Attendance::where('date','=',$yesterday)
-                            ->sum(DB::raw('direct_hrs + indirect_hrs'));
-            $absent = $expectedhrs - $hrsworked;
-            ($absent > 0) ? $TDabsentiesm = round(((($absent)/$expectedhrs)*100),0) : $TDabsentiesm = 0;
-        //}
+        $employees = Employee::where('attachee','no')->get(['id']);
+        $tthours = 0; $ttattend = 0;
+            foreach($employees as $emp){
+                $hrs = Attendance::where([['staff_id',$emp->id],['date',$yesterday]])
+                        ->sum(DB::raw('direct_hrs + indirect_hrs'));
+                $tthours += $hrs;
+                $noofemp = Attendance::where([['staff_id',$emp->id],['date',$yesterday]])->count();
+                $ttattend += $noofemp;
+            }
+        $exphrs = $ttattend*8;
+        $absent = $exphrs - $tthours;
+        ($absent > 0) ? $TDabsentiesm = round((($absent/$exphrs)*100),2) : $TDabsentiesm = 0;
 
         //MTD absenteeism
-        $empcount = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->count();
-        if($empcount != null){
-            $expectedhrs = $empcount * 8;
-            $hrsworked = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])
-                            ->sum(DB::raw('direct_hrs + indirect_hrs'));
-            $absent = $expectedhrs - $hrsworked;
-            ($absent > 0) ? $MTDabsentiesm = round(((($absent)/$expectedhrs)*100),0) : $MTDabsentiesm = 0;
-        }
+        $employees = Employee::where('attachee','no')->get(['id']);
+        $mtdtthours = 0; $mtdttattend = 0;
+            foreach($employees as $emp){
+                $mtdhrs = Attendance::where('staff_id',$emp->id)->whereBetween('date', [$firstthismonthY, $yesterday])
+                        ->sum(DB::raw('direct_hrs + indirect_hrs'));
+                $mtdtthours += $mtdhrs;
+                $mtdnoofemp = Attendance::where('staff_id',$emp->id)->whereBetween('date', [$firstthismonthY, $yesterday])->count();
+                $mtdttattend += $mtdnoofemp;
+            }
+        $exphrs = $mtdttattend*8;
+        $absent = $exphrs - $mtdtthours;
+        ($absent > 0) ? $MTDabsentiesm = round((($absent/$exphrs)*100),2) : $MTDabsentiesm = 0;
         $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
 
         //DRL & DRR
@@ -175,82 +169,26 @@ class ScreenboardController extends Controller
 
     elseif($section == 'cv' || $section == 'lcv'){
         //CV & LCV SCREEN
-        if($section == 'cv'){
-            $sectionname = "CV";
-            $shops = Shop::where('lcvcv_share','cv')->orwhere('lcvcv_share','share')->get(['id','shop_name']);
-            unset($shops[3]);
-            unset($shops[6]);
-            unset($shops[8]);
-        }else{
-            $sectionname = "LCV";
-             $shops = Shop::where('lcvcv_share','lcv')->get(['id','shop_name']);
-             unset($shops[1]);
-        }
-
-        $ttinputhrs = 0; $ttoutputhrs = 0; $MTDinputhrs = 0; $MTDoutputhrs = 0; $MTDttindirect = 0; $TDttindirect = 0;
-        $TDdirect = 0; $TDindirect = 0; $TDtthrs = 0; $MTDdirect = 0; $MTDindirect = 0; $MTDtthrs = 0;
-        $TDempcount = 0; $MTDempcount = 0; $TDhrsworked = 0; $MTDhrsworked = 0;
-        foreach($shops as $sp){
-            //Plant efficiency TODAY
-            $efftthrs = Attendance::where([['date',$yesterday],['shop_id',$sp->id]])->sum(DB::raw('efficiencyhrs'));
-            $spmtdlnhrs = Attendance::where([['date',$yesterday],['shop_loaned_to',$sp->id]])->sum(DB::raw('loaned_hrs'));
-            $spmtdotlnhrs = Attendance::where([['date',$yesterday],['shop_loaned_to',$sp->id]])->sum(DB::raw('otloaned_hrs'));
-            $suminputhrs = $efftthrs + $spmtdlnhrs + $spmtdotlnhrs;
-            $ttinputhrs += $suminputhrs;
-
-            $ttoutputhrs += Unitmovement::where([['datetime_out',$yesterday],['shop_id',$sp->id]])->sum('std_hrs');
-
-            //Plant efficiency MTD
-            $MTDinputhrs += Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->sum(DB::raw('efficiencyhrs + loaned_hrs + otloaned_hrs'));
-            $MTDoutputhrs += Unitmovement::whereBetween('datetime_out', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->sum('std_hrs');
-
-            //TEAMLEADER AVAILABILITY
-            $teamleaders = Employee::where([['team_leader','=','yes'],['status','=','Active'],['shop_id',$sp->id]])->get('id');
-            foreach($teamleaders as $tl){
-                //Today
-                $TDdirect = Attendance::where([['staff_id','=',$tl->id],['date', '=', $yesterday]])
-                            ->sum(DB::raw('direct_hrs + othours'));
-                $TDindirect = Attendance::where([['staff_id','=',$tl->id],['date', '=', $yesterday]])
-                            ->sum(DB::raw('indirect_hrs + indirect_othours'));
-                $TDtthrs += $TDdirect + $TDindirect;
-                $TDttindirect += $TDindirect;
-
-                //MTD
-                $MTDdirect = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('staff_id','=',$tl->id)
-                        ->sum(DB::raw('direct_hrs + othours'));
-                $MTDindirect = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('staff_id','=',$tl->id)
-                        ->sum(DB::raw('indirect_hrs + indirect_othours'));
-                $MTDtthrs += $MTDdirect + $MTDindirect;
-                $MTDttindirect += $MTDindirect;
-            }
-
-            //ABSENTEEISM
-            //Yesterday absenteeism
-            $TDempcount += Attendance::where([['date','=',$yesterday],['shop_id',$sp->id]])->count();
-            $TDhrsworked += Attendance::where([['date','=',$yesterday],['shop_id',$sp->id]])->sum(DB::raw('direct_hrs + indirect_hrs'));
-            //MTD absenteeism
-            $MTDempcount += Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->count();
-            $MTDhrsworked += Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->sum(DB::raw('direct_hrs + indirect_hrs'));
-        }
-
-        $TDTLavail = ($TDtthrs > 0) ? round(($TDttindirect/$TDtthrs)*100,0) : 0;
-
-        $MTDTLavail = ($MTDtthrs > 0) ? round(($MTDttindirect/$MTDtthrs)*100,0) : 0;
-        $plantTL_target = round(getplantTLAtarget(),0);
-
-        $TDexpectedhrs = $TDempcount * 8;    $TDabsent = $TDexpectedhrs - $TDhrsworked;
-        ($TDabsent > 0) ? $TDabsentiesm = round(((($TDabsent)/$TDexpectedhrs)*100),0) : $TDabsentiesm = 0;
-
-        $MTDexpectedhrs = $MTDempcount * 8;     $MTDabsent = $MTDexpectedhrs - $MTDhrsworked;
-        ($MTDabsent > 0) ? $MTDabsentiesm = round(((($MTDabsent)/$MTDexpectedhrs)*100),0) : $MTDabsentiesm = 0;
-        $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
-
-        $TDplant_eff = ($ttinputhrs > 0) ? round(($ttoutputhrs/$ttinputhrs)*100,0) : 0;
-        $MTDplant_eff = ($MTDinputhrs > 0) ? round(($MTDoutputhrs/$MTDinputhrs)*100,0) : 0;
-        $planteff_target = round(getTarget($firstthismonthY)->efficiency,0);
 
         //FCW MTD and today
         if($section == 'cv'){
+            $sectionname = "CV";
+
+            //TL Availability
+            $TDTLavail = getCVLCVTLavailability($yesterday, $yesterday,$section);
+            $MTDTLavail = getCVLCVTLavailability($firstthismonthY, $yesterday,$section);
+            $plantTL_target = round(getplantTLAtarget(),0);
+
+            //Absenteeism
+            $TDabsentiesm = getCVLCVAbsenteeism($yesterday, $yesterday,$section);
+            $MTDabsentiesm = getCVLCVAbsenteeism($firstthismonthY, $yesterday,$section);
+            $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
+
+            //Efficiency
+            $TDplant_eff = getCVLCVEfficiency($yesterday, $yesterday,$section);
+            $MTDplant_eff = getCVLCVEfficiency($firstthismonthY, $yesterday,$section);
+            $planteff_target = round(getTarget($firstthismonthY)->efficiency,0);
+
             //FCW
             $TDfcw = Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',1]])->count() + Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',2]])->count() + Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',3]])->count();
             $MTDfcw = Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',1]])->count() + Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',2]])->count() + Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',3]])->count();
@@ -297,6 +235,23 @@ class ScreenboardController extends Controller
             $MTDdrr = month_to_date_drr()['plant_drr'];
             $MTDdrrtarget = month_to_date_drr()['drr_target_value'];
         }else{
+            $sectionname = "LCV";
+
+            //TL Availability
+            $TDTLavail = getCVLCVTLavailability($yesterday, $yesterday,$section);
+            $MTDTLavail = getCVLCVTLavailability($firstthismonthY, $yesterday,$section);
+            $plantTL_target = round(getplantTLAtarget(),0);
+
+            //Absenteeism
+            $TDabsentiesm = getCVLCVAbsenteeism($yesterday, $yesterday,$section);
+            $MTDabsentiesm = getCVLCVAbsenteeism($firstthismonthY, $yesterday,$section);
+            $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
+
+            //Efficiency
+            $TDplant_eff = getCVLCVEfficiency($yesterday, $yesterday,$section);
+            $MTDplant_eff = getCVLCVEfficiency($firstthismonthY, $yesterday,$section);
+            $planteff_target = round(getTarget($firstthismonthY)->efficiency,0);
+
             //FCW
             $TDfcw = Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',5]])->count() + Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',4]])->count();
             $MTDfcw = Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',4]])->count() + Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',5]])->count();
@@ -412,13 +367,7 @@ class ScreenboardController extends Controller
         //PLANT SCREEN
 
         //Plant efficiency TODAY
-        $tddrhrs = Attendance::where('date','=',$yesterday)->sum(DB::raw('efficiencyhrs'));
-        $tdlnhrs = Attendance::where('date','=',$yesterday)->sum(DB::raw('loaned_hrs'));
-        $tdotlnhrs = Attendance::where('date','=',$yesterday)->sum(DB::raw('otloaned_hrs'));
-        $TDinput = $tddrhrs + $tdlnhrs + $tdotlnhrs;
-
-        $TDoutput = Unitmovement::where('datetime_out','=',$yesterday)->sum('std_hrs');
-        $TDplant_eff = ($TDinput > 0) ? round(($TDoutput/$TDinput)*100,0) : 0;
+        $TDplant_eff =  $TDplant_eff =  getPlantEfficiency($yesterday, $yesterday);//($TDinput > 0) ? round(($TDoutput/$TDinput)*100,0) : 0;
 
         //MTD EFFICIENCY
         $MTDplant_eff = getPlantEfficiency($firstthismonthY, $yesterday);//($MTDinput > 0) ? round(($MTDoutput/$MTDinput)*100,0) : 0;
@@ -445,12 +394,13 @@ class ScreenboardController extends Controller
         $cvwdpv = round(GcaScore::where('id','=',$cvid)->value('mtdwdpv'),2);
         $lcvwdpv = round(GcaScore::where('id','=',$lcvid)->value('mtdwdpv'),2);
 
-        $cvdefects = GcaScore::where('id','=',$cvid)->sum(DB::raw('defectcar1 + defectcar1'));
-        $lcvdefects = GcaScore::where('id','=',$lcvid)->sum(DB::raw('defectcar1 + defectcar1'));
+        $cvdefects = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','cv')->sum(DB::raw('defectcar1 + defectcar2'));
+        $lcvdefects = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','lcv')->sum(DB::raw('defectcar1 + defectcar2'));
+        $cvsample = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','cv')->sum('units_sampled');
+        $lcvsample = GcaScore::whereBetween('date',[$firstthismonth, $today])->where('lcv_cv','=','lcv')->sum('units_sampled');
 
-
-        $cvdpv = round(($cvdefects/GcaScore::where('id','=',$cvid)->value('units_sampled')),2);
-        $lcvdpv = round(($lcvdefects/GcaScore::where('id','=',$lcvid)->value('units_sampled')),2);
+        $cvdpv = ($cvsample == 0) ? 0 : round(($cvdefects/$cvsample),2);
+        $lcvdpv = ($lcvsample == 0) ? 0 : round(($lcvdefects/$lcvsample),2);
 
 
         $cvdpvtarget = (getGCATarget($today) == '0')? 0 : round(getGCATarget($today)->cvdpv,1);
@@ -494,24 +444,34 @@ class ScreenboardController extends Controller
 
         //ABSENTEEISM
         //Yesterday absenteeism
-        $empcount = Attendance::where('date','=',$yesterday)->count();
-        //if($empcount != null){
-            $expectedhrs = $empcount * 8;
-            $hrsworked = Attendance::where('date','=',$yesterday)
-                            ->sum(DB::raw('direct_hrs + indirect_hrs'));
-            $absent = $expectedhrs - $hrsworked;
-            ($absent > 0) ? $TDabsentiesm = round(((($absent)/$expectedhrs)*100),0) : $TDabsentiesm = 0;
-        //}
+        $employees = Employee::where('attachee','no')->get(['id']);
+        $tthours = 0; $ttattend = 0;
+            foreach($employees as $emp){
+                $hrs = Attendance::where([['staff_id',$emp->id],['date',$yesterday]])
+                        ->sum(DB::raw('direct_hrs + indirect_hrs'));
+                $tthours += $hrs;
+                $noofemp = Attendance::where([['staff_id',$emp->id],['date',$yesterday]])->count();
+                $ttattend += $noofemp;
+            }
+        $exphrs = $ttattend*8;
+        $absent = $exphrs - $tthours;
+        ($absent > 0) ? $TDabsentiesm = round((($absent/$exphrs)*100),2) : $TDabsentiesm = 0;
 
         //MTD absenteeism
-        $empcount = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->count();
-        if($empcount != null){
-            $expectedhrs = $empcount * 8;
-            $hrsworked = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])
-                            ->sum(DB::raw('direct_hrs + indirect_hrs'));
-            $absent = $expectedhrs - $hrsworked;
-            ($absent > 0) ? $MTDabsentiesm = round(((($absent)/$expectedhrs)*100),0) : $MTDabsentiesm = 0;
-        }
+        $employees = Employee::where('attachee','no')->get(['id']);
+        $mtdtthours = 0; $mtdttattend = 0;
+            foreach($employees as $emp){
+                $mtdhrs = Attendance::where('staff_id',$emp->id)->whereBetween('date', [$firstthismonthY, $yesterday])
+                        ->sum(DB::raw('direct_hrs + indirect_hrs'));
+                $mtdtthours += $mtdhrs;
+                $mtdnoofemp = Attendance::where('staff_id',$emp->id)->whereBetween('date', [$firstthismonthY, $yesterday])->count();
+                $mtdttattend += $mtdnoofemp;
+            }
+        $exphrs = $mtdttattend*8;
+        $absent = $exphrs - $mtdtthours;
+        ($absent > 0) ? $MTDabsentiesm = round((($absent/$exphrs)*100),2) : $MTDabsentiesm = 0;
+
+
         $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
 
         //DRL & DRR
@@ -530,82 +490,26 @@ class ScreenboardController extends Controller
 
     elseif($section == 'cv' || $section == 'lcv'){
         //CV & LCV SCREEN
-        if($section == 'cv'){
-            $sectionname = "CV";
-            $shops = Shop::where('lcvcv_share','cv')->orwhere('lcvcv_share','share')->get(['id','shop_name']);
-            unset($shops[3]);
-            unset($shops[6]);
-            unset($shops[8]);
-        }else{
-            $sectionname = "LCV";
-             $shops = Shop::where('lcvcv_share','lcv')->get(['id','shop_name']);
-             unset($shops[1]);
-        }
-
-        $ttinputhrs = 0; $ttoutputhrs = 0; $MTDinputhrs = 0; $MTDoutputhrs = 0; $MTDttindirect = 0; $TDttindirect = 0;
-        $TDdirect = 0; $TDindirect = 0; $TDtthrs = 0; $MTDdirect = 0; $MTDindirect = 0; $MTDtthrs = 0;
-        $TDempcount = 0; $MTDempcount = 0; $TDhrsworked = 0; $MTDhrsworked = 0;
-        foreach($shops as $sp){
-            //Plant efficiency TODAY
-            $efftthrs = Attendance::where([['date',$yesterday],['shop_id',$sp->id]])->sum(DB::raw('efficiencyhrs'));
-            $spmtdlnhrs = Attendance::where([['date',$yesterday],['shop_loaned_to',$sp->id]])->sum(DB::raw('loaned_hrs'));
-            $spmtdotlnhrs = Attendance::where([['date',$yesterday],['shop_loaned_to',$sp->id]])->sum(DB::raw('otloaned_hrs'));
-            $suminputhrs = $efftthrs + $spmtdlnhrs + $spmtdotlnhrs;
-            $ttinputhrs += $suminputhrs;
-
-            $ttoutputhrs += Unitmovement::where([['datetime_out',$yesterday],['shop_id',$sp->id]])->sum('std_hrs');
-
-            //Plant efficiency MTD
-            $MTDinputhrs += Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->sum(DB::raw('efficiencyhrs + loaned_hrs + otloaned_hrs'));
-            $MTDoutputhrs += Unitmovement::whereBetween('datetime_out', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->sum('std_hrs');
-
-            //TEAMLEADER AVAILABILITY
-            $teamleaders = Employee::where([['team_leader','=','yes'],['status','=','Active'],['shop_id',$sp->id]])->get('id');
-            foreach($teamleaders as $tl){
-                //Today
-                $TDdirect = Attendance::where([['staff_id','=',$tl->id],['date', '=', $yesterday]])
-                            ->sum(DB::raw('direct_hrs + othours'));
-                $TDindirect = Attendance::where([['staff_id','=',$tl->id],['date', '=', $yesterday]])
-                            ->sum(DB::raw('indirect_hrs + indirect_othours'));
-                $TDtthrs += $TDdirect + $TDindirect;
-                $TDttindirect += $TDindirect;
-
-                //MTD
-                $MTDdirect = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('staff_id','=',$tl->id)
-                        ->sum(DB::raw('direct_hrs + othours'));
-                $MTDindirect = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('staff_id','=',$tl->id)
-                        ->sum(DB::raw('indirect_hrs + indirect_othours'));
-                $MTDtthrs += $MTDdirect + $MTDindirect;
-                $MTDttindirect += $MTDindirect;
-            }
-
-            //ABSENTEEISM
-            //Yesterday absenteeism
-            $TDempcount += Attendance::where([['date','=',$yesterday],['shop_id',$sp->id]])->count();
-            $TDhrsworked += Attendance::where([['date','=',$yesterday],['shop_id',$sp->id]])->sum(DB::raw('direct_hrs + indirect_hrs'));
-            //MTD absenteeism
-            $MTDempcount += Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->count();
-            $MTDhrsworked += Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_id',$sp->id)->sum(DB::raw('direct_hrs + indirect_hrs'));
-        }
-
-        $TDTLavail = ($TDtthrs > 0) ? round(($TDttindirect/$TDtthrs)*100,0) : 0;
-
-        $MTDTLavail = ($MTDtthrs > 0) ? round(($MTDttindirect/$MTDtthrs)*100,0) : 0;
-        $plantTL_target = round(getplantTLAtarget(),0);
-
-        $TDexpectedhrs = $TDempcount * 8;    $TDabsent = $TDexpectedhrs - $TDhrsworked;
-        ($TDabsent > 0) ? $TDabsentiesm = round(((($TDabsent)/$TDexpectedhrs)*100),0) : $TDabsentiesm = 0;
-
-        $MTDexpectedhrs = $MTDempcount * 8;     $MTDabsent = $MTDexpectedhrs - $MTDhrsworked;
-        ($MTDabsent > 0) ? $MTDabsentiesm = round(((($MTDabsent)/$MTDexpectedhrs)*100),0) : $MTDabsentiesm = 0;
-        $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
-
-        $TDplant_eff = ($ttinputhrs > 0) ? round(($ttoutputhrs/$ttinputhrs)*100,0) : 0;
-        $MTDplant_eff = ($MTDinputhrs > 0) ? round(($MTDoutputhrs/$MTDinputhrs)*100,0) : 0;
-        $planteff_target = round(getTarget($firstthismonthY)->efficiency,0);
 
         //FCW MTD and today
         if($section == 'cv'){
+            $sectionname = "CV";
+
+            //TL Availability
+            $TDTLavail = getCVLCVTLavailability($yesterday, $yesterday,$section);
+            $MTDTLavail = getCVLCVTLavailability($firstthismonthY, $yesterday,$section);
+            $plantTL_target = round(getplantTLAtarget(),0);
+
+            //Absenteeism
+            $TDabsentiesm = getCVLCVAbsenteeism($yesterday, $yesterday,$section);
+            $MTDabsentiesm = getCVLCVAbsenteeism($firstthismonthY, $yesterday,$section);
+            $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
+
+            //Efficiency
+            $TDplant_eff = getCVLCVEfficiency($yesterday, $yesterday,$section);
+            $MTDplant_eff = getCVLCVEfficiency($firstthismonthY, $yesterday,$section);
+            $planteff_target = round(getTarget($firstthismonthY)->efficiency,0);
+
             //FCW
             $TDfcw = Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',1]])->count() + Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',2]])->count() + Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',3]])->count();
             $MTDfcw = Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',1]])->count() + Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',2]])->count() + Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',3]])->count();
@@ -652,6 +556,24 @@ class ScreenboardController extends Controller
             $MTDdrr = month_to_date_drr()['plant_drr'];
             $MTDdrrtarget = month_to_date_drr()['drr_target_value'];
         }else{
+
+            $sectionname = "LCV";
+
+            //TL Availability
+            $TDTLavail = getCVLCVTLavailability($yesterday, $yesterday,$section);
+            $MTDTLavail = getCVLCVTLavailability($firstthismonthY, $yesterday,$section);
+            $plantTL_target = round(getplantTLAtarget(),0);
+
+            //Absenteeism
+            $TDabsentiesm = getCVLCVAbsenteeism($yesterday, $yesterday,$section);
+            $MTDabsentiesm = getCVLCVAbsenteeism($firstthismonthY, $yesterday,$section);
+            $plantAB_target = round(getTarget($firstthismonthY)->absentieesm,0);
+
+            //Efficiency
+            $TDplant_eff = getCVLCVEfficiency($yesterday, $yesterday,$section);
+            $MTDplant_eff = getCVLCVEfficiency($firstthismonthY, $yesterday,$section);
+            $planteff_target = round(getTarget($firstthismonthY)->efficiency,0);
+
             //FCW
             $TDfcw = Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',5]])->count() + Unitmovement::where([['datetime_out',$today],['shop_id',16],['route_number',4]])->count();
             $MTDfcw = Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',4]])->count() + Unitmovement::whereBetween('datetime_out', [$firstthismonth, $today])->where([['shop_id',16],['route_number',5]])->count();
@@ -1096,16 +1018,21 @@ class ScreenboardController extends Controller
             //DAILY REALTIME PRODUCTION - taget
             if($shopid == 8){
                 $units = Production_target::where([['shop'.$shopid.'','=',$date],['route_id','=',1]])->value('noofunits');
+                $targets[$shopid] = $units;
             }elseif($shopid == 10){
                 $units = Production_target::where([['shop'.$shopid.'','=',$date],['route_id','=',3]])->value('noofunits');
+                $targets[$shopid] = $units;
             }elseif($shopid == 11 || $shopid == 12 || $shopid == 13){
                 $units = Production_target::where('shop'.$shopid.'','=',$date)->value('noofunits');
+                $targets[$shopid] = $units;
             }elseif($shopid == 14 || $shopid == 15 || $shopid == 16){
                 $cv = Production_target::where('cv','=',$date)->value('noofunits');
                 $lcv = Production_target::where('lcv','=',$date)->value('noofunits');
                 $units = $cv + $lcv;
+                $targets[$shopid] = $units;
             }else{
                 $units = Production_target::where('shop'.$shopid.'','=',$date)->sum('noofunits');
+                $targets[$shopid] = $units;
             }
             $units = ($units == "") ? 0 : $units;
 
@@ -1160,10 +1087,12 @@ class ScreenboardController extends Controller
 
             $finishedunits[$shopid] = $t_actual;
             $targetunits[$shopid] = $t_target;
-        }
 
+        }
+        //return $targets;
 
         $data = array(
+            'targets'=>$targets,
             'shops'=>$shops,
             'finishedunits'=>$finishedunits,
             'targetunits'=>$targetunits,
@@ -1243,12 +1172,31 @@ public function load_datable_defects (Request $request){
                     })->rawColumns(['status'])
 
                 ->make(true);
-
-
-
 }
 }
 
+public function timer(){
+    $data = array(
+        'time' => Carbon::now()->format('g:i:s A'),
+    );
+    return response()->json(['data' => $data], 200);
+}
 
+public function testing(){
+    //$shops = Shop::with('attendance')->get();
+    //$attends = Attendance::with('employee.shop')->get();
+    $tl = 'yes'; $ntl = 'no';
+    return $employees = Shop::withCount(['employees'=>function($query) use ($tl){
+        $query->where('team_leader',$tl);
+        }],'id')
+        ->withCount(['employees'=>function($query) use ($ntl){
+        $query->where('team_leader',$ntl);
+        }],'id')->get();
+
+    $data = array(
+        'employees' => $employees,
+    );
+    return view('screenboard.testview')->with($data);
+}
 
 }

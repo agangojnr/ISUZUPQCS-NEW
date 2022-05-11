@@ -43,29 +43,29 @@ class OutsourceController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    { 
+    {
         $marked = $request->input('button');
         if($marked == "marked"){
             $validator = Validator::make($request->all(), [
                 'staffno' => 'required',
                 'staffname' => 'required',
                 'overtime' => 'required',
-                'authhrs' => 'required',            
+                'authhrs' => 'required',
             ]);
         }else{
             $validator = Validator::make($request->all(), [
                 'staffno' => 'required',
-                'staffname' => 'required',            
-            ]);        
+                'staffname' => 'required',
+            ]);
         }
 
         if ($validator->fails()) {
             Toastr::error('Sorry! All fields are required.');
             return back();
         }
-        
+
         $uniqueno = Employee::max('unique_no');
-        
+
         try{
             DB::beginTransaction();
             $emp = new Employee;
@@ -76,6 +76,8 @@ class OutsourceController extends Controller
             $emp->Category = "Indirect";
             $emp->shop_id = $request->input('shop_id');
             $emp->status = "Active";
+            $emp->team_leader = "no";
+            $emp->user_id = auth()->user()->id;
             $emp->outsource = "yes";
             $emp->outsource_date = $request->input('date');
             $emp->save();

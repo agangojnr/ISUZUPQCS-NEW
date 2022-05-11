@@ -461,7 +461,7 @@
 
             function runningTime() {
                 $.ajax({
-                        url: '{{route('screenboardindexReload')}}',
+                        url: '{{route('timer')}}',
                         method: "GET",
                         dataType: 'json',
                         data:{'section':"{{$_GET['section']}}",'shift':"{{$_GET['shift']}}"},
@@ -492,7 +492,7 @@
                     //ABSENTIEESM
                     var actualab = response.data.MTDabsentiesm;
                     var targetab = response.data.plantAB_target;
-                    if(actualab < targetab){
+                    if(actualab > targetab){
                         $('#abssmile').hide();
                         $('#absfrown').show();
                     }else{

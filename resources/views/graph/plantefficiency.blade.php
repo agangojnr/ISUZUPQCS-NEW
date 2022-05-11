@@ -288,7 +288,7 @@
       $(document).ready(function () {
             var labels = { visible: true, position: 'inside'};
              var value = <?php echo $plant_absentpc; ?>;
-            var value1 = value+"%<br> Daily Plant<br>Absentieesm";
+            var value1 = value+"%<br> MTD Plant<br>Absentieesm";
 
             //Create jqxGauge
             $('#gauge2').jqxGauge({
@@ -316,7 +316,7 @@
         $(document).ready(function () {
             var labels = { visible: true, position: 'inside'};
              var value = <?php echo $plantTLAvail; ?>;
-            var value1 = value+"%<br>Daily Plant <br>T/L Availability";
+            var value1 = value+"%<br>MTD Plant <br>T/L Availability";
 
             //Create jqxGauge
             $('#gauge3').jqxGauge({
@@ -421,46 +421,6 @@ const data = {
     );
 });
 
-  /*new Chart(document.getElementById("bar-chart-horizontal"), {
-		type: 'bar',
-		data: {
-		  labels: shopnames,
-		  datasets: [
-			{
-			  label: "% Efficiency",
-			  backgroundColor: shopcolor,
-			  data: shop_eff//[88,67,54,84,33,58,67,54,94,63,74]
-			}
-		  ]
-		},
-		options: {
-		  legend: { display: false },
-		  title: {
-			display: true,
-			text: 'DAILY EFICIENCY PER SHOP'
-		  },
-          scales: {
-                yAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: '% EFFICIENCY'
-                },
-                ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 120
-                }
-                }],
-                xAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: 'SHOP'
-                }
-                }]
-            },
-
-    }
-});*/
-
 //MTD EFICIENCY PER SHOP
 $(document).ready(function () {
 var shopnames = <?php echo $shopnames; ?>;
@@ -537,46 +497,6 @@ const data = {
       config
     );
 });
-
-  /*new Chart(document.getElementById("bar-chart-horizontal1"), {
-		type: 'bar',
-		data: {
-		  labels: shopnames,
-		  datasets: [
-			{
-			  label: "% Efficiency",
-			  backgroundColor: shopcolor,
-			  data: MTDshop_eff//[88,67,54,84,33,58,67,54,94,63,74]
-			}
-		  ]
-		},
-		options: {
-		  legend: { display: false },
-		  title: {
-			display: true,
-			text: 'MTD EFICIENCY PER SHOP'
-		  },
-          scales: {
-                yAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: '% EFFICIENCY'
-                },
-                ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 120
-                }
-                }],
-                xAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: 'SHOP'
-                }
-                }]
-            }
-    }
-});*/
-
 
 
 //MTD ABSENTIEESM PER SHOP
@@ -655,45 +575,6 @@ const data = {
       config
     );
 });
-  /*new Chart(document.getElementById("bar-chart-horizontal2"), {
-		type: 'bar',
-		data: {
-		  labels: shopnames,
-		  datasets: [
-			{
-			  label: "% Absentieesm",
-			  backgroundColor: shopcolor,
-			  data: absentiesm//[88,67,54,84,33,58,67,54,94,63,74]
-			}
-		  ]
-		},
-		options: {
-		  legend: { display: false },
-		  title: {
-			display: true,
-			text: 'DAILY ABSENTIEESM PER SHOP'
-		  },
-          scales: {
-                yAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: '% ABSENTIEESM'
-                },
-                ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 120
-                }
-                }],
-                xAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: 'SHOP'
-                }
-                }]
-            }
-    }
-});*/
-
 
 //TEAM LEADER AVAILABILITY
 $(document).ready(function () {
@@ -771,50 +652,7 @@ const data = {
       config
     );
 });
-/*var shopnames = <?php echo $shopnames; ?>;
-  var shopcolor = <?php echo $shopcolor; ?>;
-  var shopTLavail = <?php echo $shopTLavail; ?>;
-
-  new Chart(document.getElementById("bar-chart-horizontal3"), {
-		type: 'bar',
-		data: {
-		  labels: shopnames,
-		  datasets: [
-			{
-			  label: "% AVAILABILITY",
-			  backgroundColor: shopcolor,
-			  data: shopTLavail//[88,67,54,84,33,58,67,54,94,63,74]
-			}
-		  ]
-		},
-		options: {
-		  legend: { display: false },
-		  title: {
-			display: true,
-			text: 'TEAMLEADER AVAILABILITY PER SHOP'
-		  },
-          scales: {
-                yAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: '% AVAILABILITY'
-                },
-                ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 120
-                }
-                }],
-                xAxes: [{
-                scaleLabel: {
-                    display: true,
-                    labelString: 'SHOP'
-                }
-                }]
-            }
-    }
-});*/
-
-    </script>
+</script>
 
 
 

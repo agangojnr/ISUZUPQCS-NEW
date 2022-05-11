@@ -60,7 +60,8 @@
                                <div class="card-body">
                                    <div class="row">
                                     <div class="col-7">
-                                        <h2 class="card-title text-white">{{$item->shop_name}}</h2>
+                                        <h3 class="card-title text-white">{{$item->shop_name}}</h3>
+										<span class="badge badge-cyan" style="font-size: 16px;">Daily Target: {{$targets[$item->id]}}</span>
                                     </div>
                                        <div class="col-5">
                                          <table class="text-center">

@@ -108,7 +108,7 @@ class RoleController extends Controller
         //Permission::create(['name' => 'people-summary']);
 		//Permission::create(['name' => 'attend-register']); Replaced
         //Permission::create(['name' => 'shop-attendance']);
-		
+
         //Permission::create(['name' => 'performance-tack']);
 		//Permission::create(['name' => 'buffer-status']);
 		//Permission::create(['name' => 'actual-production']);
@@ -131,11 +131,11 @@ class RoleController extends Controller
         //Permission::create(['name' => 'drr-report']);
 		//Permission::create(['name' => 'gca-score']);
 		//Permission::create(['name' => 'mangca-target']);
-		
+
         //Permission::create(['name' => 'prod-sche']);
 		//Permission::create(['name' => 'fcw-sche']);
         //Permission::create(['name' => 'hist-sche']);
-		
+
 		//Permission::create(['name' => 'reroute-create']);
         //Permission::create(['name' => 'reroute-list']);
 
@@ -155,12 +155,21 @@ class RoleController extends Controller
         //Permission::create(['name' => 'stdActual-hours']);
         //Permission::create(['name' => 'plant-register']);
         //Permission::create(['name' => 'target-report']);
-		
+
 		//Permission::create(['name' => 'swap-create']);
 		//Permission::create(['name' => 'swap-list']);
 		//Permission::create(['name' => 'swap-reset']);
-		
+
 		//Permission::create(['name' => 'delayed-units']);
+        //Permission::create(['name' => 'pos-track']);
+        //Permission::create(['name' => 'sort-routing']);
+        //Permission::create(['name' => 'bulk-auth']);
+
+        //Permission::create(['name' => 'response-summary']);
+        //Permission::create(['name' => 'people-summary']);
+        //Permission::create(['name' => 'quality-summary']);
+
+
 
          return view('role.create');
         //

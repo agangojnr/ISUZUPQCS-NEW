@@ -297,9 +297,9 @@ class OvertimeController extends Controller
         $shopname = Shop::where('id','=',$shopid)->value('report_name');
 
 		if($shopid ==17){
-			$emps = Employee::where('shop_id','=',$shopid)->get(['id','staff_no','staff_name']);
+			$emps = Employee::where('shop_id','=',$shopid)->get(['id','staff_no','staff_name','status']);
 		}else{
-			$emps = Employee::where([['shop_id','=',$shopid],['outsource','no']])->get(['id','staff_no','staff_name']);
+			$emps = Employee::where([['shop_id','=',$shopid],['outsource','no']])->get(['id','staff_no','staff_name','status']);
 		}
         $empcount = Employee::where('shop_id','=',$shopid)->count();
 
@@ -307,7 +307,15 @@ class OvertimeController extends Controller
         $unauth = 1;
 
         foreach($emps as $emp){
-            $sato = 0; $sun = 0;
+            //Check OT for inactive
+            $sumOT = Attendance::whereBetween('date',[$datefrom,$dateto])
+                    ->where([['staff_id',$emp->id],['shop_id',$shopid]])->sum(DB::raw('othours + indirect_othours + otloaned_hrs'));
+            if($sumOT == 0 && $emp->status == 'Inactive'){
+                $removestaff[$emp->id] = 1;
+            }else{
+                $removestaff[$emp->id] = 0;
+            }
+                    $sato = 0; $sun = 0;
             $datefrom1 = $datefrom; $dates = []; $wkdys = []; $authhrs = []; $sumhrs= 0;
             while ($datefrom1 <= $dateto) {
                 $dates[] = Carbon::createFromFormat('Y-m-d', $datefrom1)->format('jS');
@@ -330,14 +338,6 @@ class OvertimeController extends Controller
                     $unauth = 1;
                     $authshow[$emp->id][] = 0;
                 }else{
-					/*if($checkloan != null){
-						$authshow[$emp->id][] = 1;
-					}else{
-						$unauth = 0;
-						$authshow[$emp->id][] = 0;
-					}*/
-
-
 					if($checkloan == null){
 						$authshow[$emp->id][] = 0;
 					}else{
@@ -415,7 +415,7 @@ class OvertimeController extends Controller
 
         $range = Carbon::createFromFormat('Y-m-d', $datefrom)->format('jS M Y').' To '.Carbon::createFromFormat('Y-m-d', $dateto)->format('jS M Y');
 
-        //return $othrs;
+        //return $removestaff;
         $data = array(
 			'otunauth'=>$otunauth,
             'saturday'=>$saturday, 'sunday'=>$sunday, 'holi'=>$holi,
@@ -427,6 +427,7 @@ class OvertimeController extends Controller
             'othrs'=>$othrs, 'emptthrs'=>$emptthrs,
             'ttothrs'=>$ttothrs, 'ttsumhrs'=>$ttsumhrs,
             'tlname'=>Employee::where([['shop_id','=',$shopid],['team_leader','=','yes']])->value('staff_name'),
+            'removestaff'=>$removestaff,
         );
         return view('overtime.otreport')->with($data);
     }
@@ -798,7 +799,7 @@ class OvertimeController extends Controller
     public function checkloaned(Request $request){
          $mdate = $request->input('date');
          $date = Carbon::createFromFormat('Y-m-d', $mdate)->format('d M Y');
-        $shopid = $request->input('shopid');
+        return $shopid = $request->input('shopid');
 
         $lonees = Attendance::where([['date', '=', $mdate], ['otshop_loaned_to', '=', $shopid]])
                     ->get(['id','staff_id','otloaned_hrs','shop_id']);
@@ -854,13 +855,21 @@ class OvertimeController extends Controller
     {
         $selectauth = AuthorisedHrs::get(['id','datefrom','dateto']);
         $selectshops = Shop::where('overtime','=','1')->pluck('report_name','id');
-
-            $daterange = $request->input('range');
-            $datearr = explode('+',$daterange);
+        if($request->input()){ //return  $request->input('mdate');
+            return $daterange = $request->input('daterange');
+            $datearr = explode('-',$daterange);
             $datefrom = Carbon::parse($datearr[0])->format('Y-m-d');
             $dateto = Carbon::parse($datearr[1])->format('Y-m-d');
             $shopid = $request->input('shop');
-
+        }else{
+            $dateto = Carbon::now()->format('Y-m-d');
+            $datefrom = Carbon::parse($dateto)->subDays(30)->format('Y-m-d');
+            if(shop() == "noshop"){
+                $shopid = 1;
+            }else{
+                $shopid = Auth()->User()->section;
+            }
+        }
 
         $weekMap = [0 => 'Sun',1 => 'Mon',2 => 'Tue',3 => 'Wed',4 => 'Thu',5 => 'Fri',6 => 'Sat'];
 
@@ -871,13 +880,26 @@ class OvertimeController extends Controller
         }
         $shopname = Shop::where('id','=',$shopid)->value('report_name');
 
-        $emps = Employee::where('shop_id','=',$shopid)->get(['id','staff_no','staff_name']);
+		if($shopid ==17){
+			$emps = Employee::where('shop_id','=',$shopid)->get(['id','staff_no','staff_name','status']);
+		}else{
+			$emps = Employee::where([['shop_id','=',$shopid],['outsource','no']])->get(['id','staff_no','staff_name','status']);
+		}
         $empcount = Employee::where('shop_id','=',$shopid)->count();
 
-        $ttsumhrs = 0; $wkndhrs = 0;
-        $unauth = 0; $wkdayhrs = 0;
+        $ttsumhrs = 0;
+        $unauth = 1;
+
         foreach($emps as $emp){
-            $sato = 0; $sun = 0;
+            //Check OT for inactive
+            $sumOT = Attendance::whereBetween('date',[$datefrom,$dateto])
+                    ->where([['staff_id',$emp->id],['shop_id',$shopid]])->sum(DB::raw('othours + indirect_othours + otloaned_hrs'));
+            if($sumOT == 0 && $emp->status == 'Inactive'){
+                $removestaff[$emp->id] = 1;
+            }else{
+                $removestaff[$emp->id] = 0;
+            }
+                    $sato = 0; $sun = 0;
             $datefrom1 = $datefrom; $dates = []; $wkdys = []; $authhrs = []; $sumhrs= 0;
             while ($datefrom1 <= $dateto) {
                 $dates[] = Carbon::createFromFormat('Y-m-d', $datefrom1)->format('jS');
@@ -894,13 +916,21 @@ class OvertimeController extends Controller
                 $authhrs[] = Attendance::where([['date','=',$datefrom1],['staff_id','=',$emp->id]])->value('auth_othrs');
 
                 //CHECK APPROVAL
-                $checkloan = Attendance::where([['staff_id','=',$emp->id],['date','=',$datefrom1],['otloaned_hrs','>',0],['loan_confirm','=',0]])->value('id');
-                if($checkloan != null){
+                $checkloan = Attendance_status::where([['shop_id','=',$shopid],['date','=',$datefrom1]])->value('status_name');
+
+                if($checkloan === "approved"){
                     $unauth = 1;
-                    $authshow[$emp->id][] = 1;
-                }else{
                     $authshow[$emp->id][] = 0;
+                }else{
+					if($checkloan == null){
+						$authshow[$emp->id][] = 0;
+					}else{
+						$unauth = 0;
+						$authshow[$emp->id][] = 1;
+					}
                 }
+
+				$empauth[$emp->id][] = $unauth;
 
                  //Totals per employee
                  $empauthhrs = Attendance::where([['date','=',$datefrom1],['staff_id','=',$emp->id]])->value('auth_othrs');
@@ -908,22 +938,22 @@ class OvertimeController extends Controller
                  if(!empty($empauthhrs)){
                     $holiday = WorkSchedule::where('date','=',$datefrom1)->first();
                     $dayno = Carbon::parse($datefrom1)->dayOfWeek;
-                     if($dayno == 6){
-
-                         $sato += Attendance::where([['date','=',$datefrom1],['staff_id','=',$emp->id]])
-                                     ->sum(DB::raw('othours + indirect_othours + otloaned_hrs'));
-                     }elseif($dayno == 0 || !empty($holiday)){
+                     if($dayno == 0 || !empty($holiday)){
 
                          $sun += Attendance::where([['date','=',$datefrom1],['staff_id','=',$emp->id]])
                                      ->sum(DB::raw('othours + indirect_othours + otloaned_hrs'));
+                     }else{
+                        $sato += Attendance::where([['date','=',$datefrom1],['staff_id','=',$emp->id]])
+                                ->sum(DB::raw('othours + indirect_othours + otloaned_hrs'));
                      }
                  }else{
 
                  }
 
                 $datefrom1 = Carbon::parse($datefrom1)->addDays(1)->format('Y-m-d');
-
             }
+
+			$empunauth[] = in_array(0,$empauth[$emp->id]);
 
             $emptthrs[$emp->id] = $sumhrs;
             $ttsumhrs += $sumhrs;
@@ -931,7 +961,11 @@ class OvertimeController extends Controller
             $saturday[$emp->id] = $sato;
             $sunday[$emp->id] = $sun;
         }
-        //return $empwkndhours;
+
+		$otunauth = in_array(true, $empunauth);
+
+
+
 
         //TOTALS
         $datefrom2 = $datefrom; $tt = 0; $ttauthhrs = 0;
@@ -965,10 +999,11 @@ class OvertimeController extends Controller
 
         $range = Carbon::createFromFormat('Y-m-d', $datefrom)->format('jS M Y').' To '.Carbon::createFromFormat('Y-m-d', $dateto)->format('jS M Y');
 
-        //return $saturday;
+        //return $removestaff;
         $data = array(
+			'otunauth'=>$otunauth,
             'saturday'=>$saturday, 'sunday'=>$sunday, 'holi'=>$holi,
-            'shopname'=>$shopname,'selectauth'=>$selectauth,
+            'shopname'=>$shopname,'selectauth'=>$selectauth, 'shopid'=>$shopid, 'daterange'=>$datefrom.'+'.$dateto,
             'range'=>$range, 'unauth'=>$unauth, 'authshow'=>$authshow,
             'selectshops'=>$selectshops, 'empcount'=>$empcount,
             'dates'=>$dates, 'authhrs'=>$authhrs, 'wkdys'=>$wkdys,
@@ -976,8 +1011,92 @@ class OvertimeController extends Controller
             'othrs'=>$othrs, 'emptthrs'=>$emptthrs,
             'ttothrs'=>$ttothrs, 'ttsumhrs'=>$ttsumhrs,
             'tlname'=>Employee::where([['shop_id','=',$shopid],['team_leader','=','yes']])->value('staff_name'),
+            'removestaff'=>$removestaff,
         );
 
         return Excel::download(new OvertimeExportView($data), 'overtime.xlsx');
+    }
+   public function bulkauth(Request $request){
+        if(Auth()->User()->section == ""){
+            Toastr::error('Whooops!, No section is assigned for the user.');
+            return back();
+        }
+
+        $shops = Shop::where('overtime',1)->get();
+        $shopid = ($request->input()) ? $request->input('shopid') : Auth()->User()->section;
+        if($shopid != "ALL"){
+            $shopname = Shop::where('id',$shopid)->value('report_name');
+            $unapproveds = Attendance_status::where([['status_name','submitted'],['shop_id',$shopid]])->orderby('date')->get();
+        }else{
+            $shopname = "";
+            $unapproveds = [];
+        }
+
+        if(count($unapproveds) > 0){
+            foreach($unapproveds as $unapp){
+                $headcount[$unapp->date] = Attendance::where([['date',$unapp->date],['shop_id',$shopid]])->count();
+                $attendancehrs[$unapp->date] = Attendance::where([['date',$unapp->date],['shop_id',$shopid]])->sum(DB::raw('direct_hrs + indirect_hrs'));
+                $overtimehrs[$unapp->date] = Attendance::where([['date',$unapp->date],['shop_id',$shopid]])->sum(DB::raw('othours + indirect_othours'));
+                $authhrs[$unapp->date] = Attendance::where([['date',$unapp->date],['shop_id',$shopid]])->sum(DB::raw('auth_othrs'));
+            }
+        }else{
+                $headcount[] = 0;
+                $attendancehrs[] = 0;
+                $overtimehrs[] = 0;
+                $authhrs[] = 0;
+        }
+
+
+        $data = array(
+            'shops1' => Shop::where('overtime','=','1')->pluck('report_name','id'),
+            'shops'=>$shops,
+            'shopname'=>$shopname,
+            'shopid'=>$shopid,
+            'unapproveds'=>$unapproveds,
+            'headcount'=>$headcount,
+            'attendancehrs'=>$attendancehrs,
+            'overtimehrs'=>$overtimehrs,
+            'authhrs'=>$authhrs,
+        );
+        return view('overtime.bulkauth')->with($data);
+    }
+
+    public function saveapprovals(Request $request){
+        $validator = Validator::make($request->all(), [
+            'checkapprovals' => 'required',
+            'shopid'=> 'required',
+        ]);
+
+        if ($validator->fails()) {
+            Toastr::error('Sorry! Check at least one box.');
+            return back();
+        }
+
+        $shopid = $request->shopid;
+        $checkapprovals = $request->checkapprovals;
+
+        try{
+            //return count($loandir);
+            DB::beginTransaction();
+
+            for($i = 0; $i < count($checkapprovals); $i++){
+                $date = $checkapprovals[$i];
+                $statusid = Attendance_status::where([['date',$checkapprovals[$i]],['shop_id',$shopid]])->first();
+                $statusid->status_name = "approved";
+                $statusid->user_id = Auth()->User()->id;
+                $statusid->save();
+            }
+
+            DB::commit();
+            Toastr::success('Bulk approval saved successfully','Saved');
+            return back();
+        }
+        catch(\Exception $e){
+            DB::rollBack();
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            Toastr::error('Sorry! Error occured approval failed.','Error');
+            return $e->getMessage();
+        }
+
     }
 }

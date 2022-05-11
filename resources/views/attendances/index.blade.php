@@ -66,44 +66,44 @@
                                 </h4>
                         </div>
                     </div>
-                    @if($shopid == 17)  
+                    @if($shopid == 17)
                     {!! Form::open(['action'=>['App\Http\Controllers\outsource\OutsourceController@store'], 'method'=>'post']); !!}
-                    {{ csrf_field(); }}  
+                    {{ csrf_field(); }}
                     <input type="hidden" value="{{$date}}" name="date">
-                    <input type="hidden" value="{{$shopid}}" name="shop_id">               
+                    <input type="hidden" value="{{$shopid}}" name="shop_id">
                     <div class="row pb-2">
                         <div class="col-2">
-                            <input type="text" class="form-control" name="staffno" autocomplete="off" 
+                            <input type="text" class="form-control" name="staffno" autocomplete="off"
                             required placeholder="Staff No here...">
                         </div>
                         <div class="col-4">
-                            <input type="text" class="form-control" name="staffname" autocomplete="off" 
+                            <input type="text" class="form-control" name="staffname" autocomplete="off"
                              required placeholder="Staff Name here...">
                         </div>
-                        
-                        @if ($marked == "Not marked")  
+
+                        @if ($marked == "Not marked")
                         <div class="col-2">
                                 <input type="hidden" value="unmarked" name="button">
                                 <button id="btn-add-contact" class="btn btn-lighten-2 text-white" style="background:teal;">
                                 <i class="mdi mdi-plus font-16 mr-1"></i>Outsource Staff</button>
-                            </div>  
-                        @else                    
+                            </div>
+                        @else
                             <div class="col-2">
-                                <input type="text" class="form-control" name="overtime" autocomplete="off" 
+                                <input type="text" class="form-control" name="overtime" autocomplete="off"
                                 required placeholder="Overtime Hrs...">
                             </div>
                             <div class="col-2">
-                                <input type="text" class="form-control" name="authhrs" autocomplete="off" 
+                                <input type="text" class="form-control" name="authhrs" autocomplete="off"
                                 required placeholder="Authorised Hrs...">
                             </div>
                             <div class="col-2">
                                 <input type="hidden" value="marked" name="button">
                                 <button id="btn-add-contact" class="btn btn-lighten-2 text-white" style="background:teal;">
                                 <i class="mdi mdi-plus font-16 mr-1"></i>Outsource Staff</button>
-                            </div> 
-                        
-                        @endif  
-                                                
+                            </div>
+
+                        @endif
+
                     </div>
                     {!! Form::close(); !!}
                     @endif
@@ -339,21 +339,21 @@
                                             class="form-control hrs" autocomplete="off" placeholder="Indirect" required>
                                         @else
                                                 @if($item->employee->team_leader == 'yes')
-                                                <div class="input-group">
-                                                    <input type="text" id="overtime_{{$num}}" name="overtime[]" value="{{$item->othours}}"
-                                                class="form-control hrs" autocomplete="off" placeholder="Direct" required>
+                                                    <div class="input-group">
+                                                        <input type="text" id="overtime_{{$num}}" name="overtime[]" value="{{$item->othours}}"
+                                                    class="form-control hrs" autocomplete="off" placeholder="Direct" required>
 
-                                                <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$item->indirect_othours}}"
-                                                class="form-control hrs" autocomplete="off" placeholder="indirect" required>
-                                                </div>
+                                                    <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$item->indirect_othours}}"
+                                                    class="form-control hrs" autocomplete="off" placeholder="indirect" required>
+                                                    </div>
                                                 @else
-                                                <div class="input-group">
-                                                <input type="text" id="overtime_{{$num}}" name="overtime[]" value="{{$item->othours}}"
-                                                class="form-control hrs" autocomplete="off" placeholder="Direct" required>
+                                                    <div class="input-group">
+                                                    <input type="text" id="overtime_{{$num}}" name="overtime[]" value="{{$item->othours}}"
+                                                    class="form-control hrs" autocomplete="off" placeholder="Direct" required>
 
-                                                <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$item->indirect_othours}}"
-                                                class="form-control hrs" autocomplete="off" placeholder="indirect" required>
-                                                </div>
+                                                    <input type="text" id="indovertime_{{$num}}" name="indovertime[]" value="{{$item->indirect_othours}}"
+                                                    class="form-control hrs" autocomplete="off" placeholder="indirect" required>
+                                                    </div>
                                                 @endif
                                         @endif
                                             </td>
@@ -436,7 +436,7 @@
 
 
                                 @if(count($outsourcestaffs) > 0)
-                                    
+
                                     @foreach($outsourcestaffs as $item1)
                                     @if($marked == "Not marked")
                                      <tr>
@@ -449,16 +449,16 @@
                                             <td>
                                                 <input type="hidden" name="direct[]" class="form-control normalhrs hrs" autocomplete="off" placeholder="Direct"
                                                 id="direct_{{$num}}" value="0" required>
-                                                <input type="hidden" name="indirect[]" value="0" id="indirect_{{$num}}" >                                            
+                                                <input type="hidden" name="indirect[]" value="0" id="indirect_{{$num}}" >
                                             </td>
                                             <td>
-                                                <input type="hidden" id="overtime_{{$num}}" name="overtime[]" value="0"> 
+                                                <input type="hidden" id="overtime_{{$num}}" name="overtime[]" value="0">
 
                                                 <input type="text" id="indovertime_{{$num}}" name="indovertime[]"
                                                 class="form-control hrs" autocomplete="off" placeholder="Direct" required>
 
-                                                                                                  
-                                                   
+
+
                                             </td>
                                             <td>
                                                 <input type="text" name="authhrs[]" value="{{$overtime}}"
@@ -475,18 +475,18 @@
                                             <td>
                                                 <input type="hidden" name="workdescription[]" value="0">
                                                 <input type="hidden" name="overshopto[]" value="0">
-                                                <input type="hidden" value="0" name="loanov[]" >                                           
+                                                <input type="hidden" value="0" name="loanov[]" >
                                             </td>
                                             <td>
                                             </td>
 
                                         </tr>
                                         @else
-                                        
+
                                         @endif
                                     @endforeach
-                                    
-                                    
+
+
                                 @endif
 
 
@@ -510,7 +510,7 @@
                                 </tr>
                             </tfoot>
                         </table>
-                    </div>                
+                    </div>
 
                     <div class="row">
                         <div class="col-md-6 col-12 align-self-center d-none d-md-block">

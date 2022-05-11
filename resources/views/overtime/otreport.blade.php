@@ -118,7 +118,7 @@
                     <div class="row mb-1">
                         <div class="col-9"></div>
                         <div class="col-3">
-                            <input type="hidden" name="range" value="{{$daterange}}">
+                            <input type="text" name="range" value="{{$daterange}}">
                             <input type="hidden" name="shop" value="{{$shopid}}">
                             @if ($otunauth == 1)
                                 <h4 class="text-danger">Sorry,Can't Print. Pending Authorization!</h4>

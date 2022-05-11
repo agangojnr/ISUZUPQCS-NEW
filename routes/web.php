@@ -47,6 +47,7 @@ use App\Http\Controllers\reviewconversation\ReviewConversationController;
 use App\Http\Controllers\outsource\OutsourceController;
 use App\Http\Controllers\screenboard\ScreenboardController;
 use App\Http\Controllers\Rerouting\ReroutingController;
+use App\Http\Controllers\summary\SummaryController;
 
 
 
@@ -86,7 +87,7 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
  Route::resource('qrcode', QrcodeController::class);
  Route::post('filterqrcode', [QrcodeController::class,'filterqrcode'])->name('filterqrcode');
  Route::get('qrcodefilterresult/{lot}/{job}/{model}', [QrcodeController::class,'qrcodefilterresult'])->name('qrcodefilterresult');
- 
+
  Route::resource('routingquery', RoutingQueryController::class);
 
  //Route::post('load_options', [RoutingQueryController::class, 'load_query']);
@@ -109,8 +110,8 @@ Route::resource('shops', ShopController::class);
  Route::post('import_process', [VehicleUnitsController::class,'import_process'])->name('import_process');
  Route::get('vehicle_unit', [VehicleUnitsController::class,'vehicle_unit'])->name('vehicle_unit');
  Route::get('updateschedule/{id}', [VehicleUnitsController::class,'updateschedule'])->name('updateschedule');
- 
- 
+
+
  Route::resource('vehiclemodels', UnitModelController::class);
  Route::resource('unitmapping', UnitMappingController::class);
  Route::resource('unitroute', RoutesController::class);
@@ -128,14 +129,14 @@ Route::resource('shops', ShopController::class);
   Route::get('querybymodel', [QuerycategoryController::class,'querybymodel'])->name('querybymodel');
   Route::get('viewquerybymodel/{id}', [QuerycategoryController::class,'viewquerybymodel'])->name('viewquerybymodel');
   Route::get('quality_control_dashboard', [HomeController::class,'quality_control_dashboard'])->name('quality_control_dashboard');
-  
-  
 
-  
+
+
+
 
   Route::post('saveanswer', [QuerycategoryController::class,'saveanswer'])->name('saveanswer');
   Route::post('updatequeryoption', [QuerycategoryController::class,'updatequeryoption'])->name('updatequeryoption');
- 
+
 
 
  Route::delete('deletequeryoption/{id}', [QuerycategoryController::class,'deletequeryoption'])->name('deletequeryoption');
@@ -143,7 +144,7 @@ Route::resource('shops', ShopController::class);
     Route::post('reorder', [QuerycategoryController::class, 'reorder'])->name('reorder');
   Route::post('categoryreorder', [QuerycategoryController::class, 'categoryreorder'])->name('categoryreorder');
 
- 
+
 
  Route::resource('roles', RoleController::class);
 
@@ -167,15 +168,15 @@ Route::resource('shops', ShopController::class);
    Route::get('changedefect/{id}', [CheckSheetController::class,'changedefect'])->name('changedefect');
    Route::get('defectsummary{from}/{to}', [ProductionReportController::class,'defectsummary'])->name('defectsummary');
   Route::get('drrlist{from}/{to}', [ProductionReportController::class,'drrlist'])->name('drrlist');
- 
+
    Route::post('updatedefect/{id}', [ProductionReportController::class,'updatedefect'])->name('updatedefect');
    Route::post('filterdefect', [ProductionReportController::class,'filterdefect'])->name('filterdefect');
 
    Route::resource('floatsetting', FloatSettingController::class);
  Route::resource('drrdata', DrrController::class);
- 
+
   Route::post('filterdrrdefect', [ProductionReportController::class,'filterdrrdefect'])->name('filterdrrdefect');
-   
+
  Route::resource('unitscheduled', ScheduledBatchController::class);
  Route::get('update_batch/{id}', [ScheduledBatchController::class,'update_batch'])->name('update_batch');
    Route::resource('swapunit', SwapUnitController::class);
@@ -192,7 +193,7 @@ Route::resource('shops', ShopController::class);
 
 
 
-  
+
  //People
  Route::resource('systemusers', SystemUsersController::class);
 
@@ -209,11 +210,11 @@ Route::resource('shops', ShopController::class);
  Route::resource('department', DepartmentController::class);
 
  Route::resource('division', DivisionController::class);
- 
+
   Route::resource('gcascore', GcaScoreController::class);
-  
+
  Route::resource('outsource', OutsourceController::class);
-  
+
   Route::resource('reviewconversation', ReviewConversationController::class);
 
  Route::resource('attendancepreview', AttendancePreviewController::class);
@@ -238,7 +239,9 @@ Route::resource('shops', ShopController::class);
 
 Route::get('markattencance', [AttendanceController::class, 'markattencance'])->name('markattencance');
 
-Route::get('checkattendance', [AttendancePreviewController::class, 'checkattendance'])->name('checkattendance');
+Route::get('checkattendance/{id}', [AttendancePreviewController::class, 'checkattendance'])->name('checkattendance');
+
+Route::get('checkattendance1', [AttendancePreviewController::class, 'checkattendance1'])->name('checkattendance1');
 
 Route::get('resetpasswordsu/{id}', [SystemUsersController::class,'resetpasswordsu'])->name('resetpasswordsu');
 
@@ -362,6 +365,26 @@ Route::get('gcatarget', [GcaScoreController::class, 'gcatarget'])->name('gcatarg
 Route::get('mangcatarget', [GcaScoreController::class, 'mangcatarget'])->name('mangcatarget');
 
 Route::get('delayedunits', [ProductiontargetController::class,'delayedunits'])->name('delayedunits');
+
+Route::get('yrresponsesummary', [SummaryController::class,'yrresponsesummary'])->name('yrresponsesummary');
+
+Route::get('mnthresponsesummary', [SummaryController::class,'mnthresponsesummary'])->name('mnthresponsesummary');
+
+Route::get('yrpeoplesummary', [SummaryController::class,'yrpeoplesummary'])->name('yrpeoplesummary');
+
+Route::get('mnthpeoplesummary', [SummaryController::class,'mnthpeoplesummary'])->name('mnthpeoplesummary');
+
+Route::get('yrqualitysummary', [SummaryController::class,'yrqualitysummary'])->name('yrqualitysummary');
+
+Route::get('mnthqualitysummary', [SummaryController::class,'mnthqualitysummary'])->name('mnthqualitysummary');
+
+Route::get('shopresponsesummary', [SummaryController::class,'shopresponsesummary'])->name('shopresponsesummary');
+
+Route::get('unitspershop/{id}', [DashboardController::class, 'unitspershop'])->name('unitspershop');
+
+Route::get('bulkauth', [OvertimeController::class,'bulkauth'])->name('bulkauth');
+
+Route::get('saveapprovals', [OvertimeController::class,'saveapprovals'])->name('saveapprovals');
 });
 
 
@@ -376,6 +399,10 @@ Route::get('screenboarddefects/{shopid}', [ScreenboardController::class,'screenb
 Route::get('screenboardpershopReload', [ScreenboardController::class,'screenboardpershopReload'])->name('screenboardpershopReload');
 
 Route::get('screenboardindexReload', [ScreenboardController::class,'screenboardindexReload'])->name('screenboardindexReload');
+
+Route::get('timer', [ScreenboardController::class,'timer'])->name('timer');
+
+Route::get('testing', [ScreenboardController::class,'testing'])->name('testing');
 
 Route::get('screenboardall', [ScreenboardController::class,'screenboardall'])->name('screenboardall');
 Route::post('load_defects', [ScreenboardController::class,'load_defects'])->name('load_defects');

@@ -31,7 +31,7 @@ class GraphController extends Controller
 
 
     public function plantefficiency(){
-		
+
         $today = Carbon::yesterday()->format('Y-m-d');
         $first = Carbon::create($today)->startOfMonth()->format('Y-m-d');
         $firstthisyr = Carbon::create($today)->startOfYear()->format('Y-m-d');
@@ -52,8 +52,6 @@ class GraphController extends Controller
         $firstthisyr = $YRprodndays[0];
         $fromdate = $today;
         $todate = $today;
-
-
 
         $activetag = IndivTarget::max('id');
         $plantabb = IndivTarget::where('id','=',$activetag)->value('absentieesm');
@@ -100,41 +98,21 @@ class GraphController extends Controller
          $TDoutput -= $lcvfinal;
         $TDplant_eff = ($TDinput > 0) ? round(($TDoutput/$TDinput)*100,0) : 0;
 
-        //EFFPLANT MTD        
+        //EFFPLANT MTD
 		$MTDplant_eff = getPlantEfficiency($firstthismonthY, $yesterday);
 
         //EFF PLANT YTD
-        $ytddrhrs = 0; $ytdlnhrs = 0; $ytdotlnhrs = 0;
-        foreach($efshops as $shop){
-            $ytddrhrs += Attendance::whereBetween('date', [$firstthisyrY, $yesterday])->where('shop_id',$shop->id)->sum(DB::raw('efficiencyhrs'));
-            $ytdlnhrs += Attendance::whereBetween('date', [$firstthisyrY, $yesterday])->where('shop_loaned_to',$shop->id)->sum(DB::raw('loaned_hrs'));
-            $ytdotlnhrs += Attendance::whereBetween('date', [$firstthisyrY, $yesterday])->where('shop_loaned_to',$shop->id)->sum(DB::raw('otloaned_hrs'));
-        }
-        $YTDinput = $ytddrhrs + $ytdlnhrs + $ytdotlnhrs;
-        $YTDoutput = Unitmovement::whereBetween('datetime_out', [$firstthisyrY, $yesterday])->sum('std_hrs');
-		$lcvfinal = Unitmovement::whereBetween('datetime_out', [$firstthisyrY, $yesterday])->where('shop_id',13)->sum('std_hrs');
-        $YTDoutput -= $lcvfinal;
-        $YTDplant_eff = ($YTDinput > 0) ? round(($YTDoutput/$YTDinput)*100,0) : 0;
+        $YTDplant_eff = getPlantEfficiency($firstthisyrY, $yesterday);//($YTDinput > 0) ? round(($YTDoutput/$YTDinput)*100,0) : 0;
 
         //EFF SHOP YESTERDAY
         $sptddrhrs = 0; $sptdlnhrs = 0; $sptdotlnhrs = 0;
         foreach($efshops as $shop){
-            $sptddrhrs = Attendance::where([['shop_id',$shop->id],['date',$yesterday]])->sum(DB::raw('efficiencyhrs'));
-            $sptdlnhrs = Attendance::where([['shop_loaned_to',$shop->id],['date',$yesterday]])->sum(DB::raw('loaned_hrs'));
-            $sptdotlnhrs = Attendance::where([['shop_loaned_to',$shop->id],['date',$yesterday]])->sum(DB::raw('otloaned_hrs'));
-            $TDinput = $sptddrhrs + $sptdlnhrs + $sptdotlnhrs;
-            $TDoutput = Unitmovement::where([['datetime_out',$yesterday],['shop_id',$shop->id]])->sum('std_hrs');
-            $TDshop_eff[] = ($TDinput > 0) ? round(($TDoutput/$TDinput)*100,0) : 0;
+           $TDshop_eff[] = getshopEfficiency($yesterday, $yesterday,$shop->id);//($TDinput > 0) ? round(($TDoutput/$TDinput)*100,0) : 0;
         }
 
         //EFF SHOP MTD
         foreach($efshops as $shop){
-            $spmtddrhrs = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_id',$shop->id)->sum('efficiencyhrs');
-            $spmtdlnhrs = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_loaned_to',$shop->id)->sum('loaned_hrs');
-            $spmtdotlnhrs = Attendance::whereBetween('date', [$firstthismonthY, $yesterday])->where('shop_loaned_to',$shop->id)->sum('otloaned_hrs');
-            $MTDinput = $spmtddrhrs + $spmtdlnhrs + $spmtdotlnhrs;
-            $MTDoutput = Unitmovement::whereBetween('datetime_out', [$firstthismonthY, $yesterday])->where('shop_id',$shop->id)->sum('std_hrs');
-            $MTDshop_eff[] = ($MTDinput > 0) ? round(($MTDoutput/$MTDinput)*100,0) : 0;
+           $MTDshop_eff[] =  getshopEfficiency($firstthismonthY, $yesterday,$shop->id);//($MTDinput > 0) ? round(($MTDoutput/$MTDinput)*100,0) : 0;
         }
 
         //ABS PLANT MTD
