@@ -1944,10 +1944,4 @@ if($updatedata){
         return  Drr::where('vehicle_id', $value)->where('shop_id',$value1)->exists();
     }
 
-
-
-
-
-
-
 }

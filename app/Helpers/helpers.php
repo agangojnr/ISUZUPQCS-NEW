@@ -15,6 +15,7 @@ use App\Models\employee\Employee;
 use App\Models\vehicle_units\vehicle_units;
 use App\Models\indivtarget\IndivTarget;
 use App\Models\gcatarget\GcaTarget;
+use App\Models\workschedule\WorkSchedule;
 
 if (!function_exists('numberClean')) {
 
@@ -405,14 +406,26 @@ function getAbsenteeism($start,$end){
         $query->whereBetween('date', [$start, $end])->whereIn('shop_id',$abshops);
     } ])->where('attachee','no')->get();
 
-    $workedhrs = 0; $expectedhrs = 0;
-    foreach($employees as $emp){
-        $workedhrs += $emp->empattendance_sum_direct_hrs + $emp->empattendance_sum_indirect_hrs;
-        $expectedhrs += $emp->empattendance_count * 8;
+
+    $allattendance = Attendance::whereBetween('date', [$start, $end])->get('date');
+    $workingdays = 0;
+    foreach($allattendance as $attend){
+        if((Carbon::parse($attend->date)->dayOfWeek == 0) || (Carbon::parse($attend)->dayOfWeek == 6)){
+         }else{
+            $workingdays += 8;
+         }
     }
-    $absenthrs = $expectedhrs - $workedhrs;
+
+    $expectedhrs = $workingdays;
+
+    $workedhours = Attendance::whereBetween('date', [$start, $end])
+            ->sum(DB::raw('direct_hrs + indirect_hrs'));
+
+
+    $absenthrs = $expectedhrs - $workedhours;
+
     ($absenthrs > 0) ? $MTDabsentiesm = round((($absenthrs/$expectedhrs)*100),2) : $MTDabsentiesm = 0;
-    return $MTDabsentiesm;
+    return  $MTDabsentiesm;
 }
 
 function getshopTLavailability($start,$end,$shopid){

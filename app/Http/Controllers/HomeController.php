@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use DateTime;
 use App\Models\querydefect\Querydefect;
 use App\Models\drrtarget\DrrTarget;
 use App\Models\unitmovement\Unitmovement;
@@ -45,6 +46,10 @@ class HomeController extends Controller
     {
 
 
+
+ //return getAbsenteeism('2022-05-01', '2022-05-18');
+
+			//dd(month_to_date_drr(10));
     //DRR Month to Date
         $today=Carbon::now();
         $startDate = Carbon::now(); //returns current day
@@ -330,35 +335,76 @@ $master['efftag'] = round($efftag,0);
 
 
 //ABSENTIEESM
-$master['absentiesm'] = getAbsenteeism($firstthismonthY, $yesterday);
-$master['plantabb'] = round($plantabb,0);
+	$absentiesm = getAbsenteeism($yesterday, $yesterday);;
+	$master['absentiesm'] = getAbsenteeism($firstthismonthY, $yesterday);;
+    $master['plantabb'] = round($plantabb,0);
 
 
 //TEAMLEADER AVAILABILITY
-$MTDTLavail = getTLavailability($firstthismonthY, $yesterday);;
-
-
-$master['TLavail'] = round($MTDTLavail,2);
+$master['TLavail'] = getTLavailability($firstthismonthY, $yesterday);
 $master['planttlav'] = round($planttlav,0);
 
 
 //OFFLINE
 $today = carbon::now()->format('Y-m-d');
+$yesta = carbon::yesterday()->format('Y-m-d');
+
+$now = Carbon::now()->format('Y-m-d H:i');
+
+
 $offline = UnitMovement::whereBetween('datetime_out',[$first, $today])->where('shop_id','=',8)->count() + UnitMovement::whereBetween('datetime_out',[$first, $today])->where('shop_id','=',10)->count() + UnitMovement::whereBetween('datetime_out',[$first, $today])->where('shop_id','=',13)->count();
-$offtarget = Production_target::whereBetween('date',[$first, $today])->where('level','=','offline')->sum('noofunits');
+$offlineTargetUptoYesterday = Production_target::whereBetween('date',[$first, $yesta])->where('level','offline')->sum('noofunits');
+$offtargetToday = Production_target::where([['date', $today],['level','offline']])->sum('noofunits');
+
+//FCW Targets
+$fcwlcvTargetUptoYesterday = Production_target::whereBetween('lcv',[$first, $yesta])->sum('noofunits');
+$fcwcvTargetUptoYesterday = Production_target::whereBetween('cv',[$first, $yesta])->sum('noofunits');
+$fcwTargetUptoYesterday = $fcwcvTargetUptoYesterday + $fcwlcvTargetUptoYesterday;
+
+$fcwlcvTargetToday = Production_target::where('lcv',$today)->sum('noofunits');
+$fcwcvTargetToday = Production_target::where('cv', $today)->sum('noofunits');
+$fcwTargetToday = $fcwcvTargetToday + $fcwlcvTargetToday;
+
+
+$now = Carbon::now()->format('Y-m-d H:i');
+$starttime = Carbon::parse(date('Y-m-d H:i', strtotime($today.' 07:20')));
+$endtime = Carbon::parse(date('Y-m-d H:i', strtotime($today.' 16:00')));
+
+$Endnow   = Carbon::parse($now);
+
+if($Endnow > $starttime && $Endnow < $endtime){
+    $interval = $Endnow->diffInSeconds($starttime);
+    $hours = $interval/3600;
+    $realtimeOffTarget = floor(($hours/8)*$offtargetToday);
+    $realtimeFCWTarget = floor(($hours/8)*$fcwTargetToday);
+}
+
+if($Endnow > $endtime){
+    $realtimeOffTarget = $offtargetToday;
+    $realtimeFCWTarget = $fcwTargetToday;
+}
+
+if($Endnow < $starttime){
+    $realtimeOffTarget = 0;
+    $realtimeFCWTarget = 0;
+}
+
+
+
 $master['offline'] = $offline;
-$master['offtarget'] = $offtarget;
+$master['offtarget'] = $offlineTargetUptoYesterday + $realtimeOffTarget;
 $master['offvar'] = $master['offline'] - $master['offtarget'];
 
-//FCW
+
+//FCW Actuals
 $fcw = UnitMovement::whereBetween('datetime_out',[$first, $today])
                     ->where('shop_id','=',16)->count();
 $master['actual'] = $fcw;
-$fcwlcvtarget = Production_target::whereBetween('lcv',[$first, $today])->sum('noofunits');
-$fcwcvtarget = Production_target::whereBetween('cv',[$first, $today])->sum('noofunits');
 
-$master['fcwtarget'] = $fcwlcvtarget + $fcwcvtarget; //floor($master['offtarget']/2);
+$master['fcwtarget'] = $fcwTargetUptoYesterday + $realtimeFCWTarget; //floor($master['offtarget']/2);
 $master['fcwvarience'] = $master['actual'] - $master['fcwtarget'];
+
+
 
 //GCA MTD
 $cvid = GcaScore::where('lcv_cv','=','cv')->max('id'); $lcvid = GcaScore::where('lcv_cv','=','lcv')->max('id');
@@ -384,7 +430,6 @@ $master['lcvwdpvtarget'] = (getGCATarget($today) == '0') ? 0 : round(getGCATarge
 $allschdates = Production_target::whereBetween('date', ["2022-01-01", $yesterday])
                         ->groupby('date')->get(['date']);
 $efshops = Shop::where('check_shop','=','1')->get(['report_name','id']);
-unset($efshops[9]);
 
 $unlogged = 0;
 foreach($allschdates as $date){

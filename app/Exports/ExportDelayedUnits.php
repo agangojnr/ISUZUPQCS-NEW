@@ -8,7 +8,7 @@ use Maatwebsite\Excel\Concerns\FromView;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
 
-class ActualprodnView implements FromView
+class ExportDelayedUnits implements FromView
 {
     public function __construct($data) {
         $this->data = $data;
@@ -19,6 +19,6 @@ class ActualprodnView implements FromView
     public function view():View
     {
 
-        return view('productionschedule.actualproduction_table',$this->data);
+        return view('productionschedule.delayedunits_table',$this->data);
     }
 }

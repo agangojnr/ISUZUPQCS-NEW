@@ -402,6 +402,8 @@ Route::get('screenboardindexReload', [ScreenboardController::class,'screenboardi
 
 Route::get('timer', [ScreenboardController::class,'timer'])->name('timer');
 
+Route::get('delayedunitsExport', [ProductiontargetController::class,'delayedunitsExport'])->name('delayedunitsExport');
+
 Route::get('testing', [ScreenboardController::class,'testing'])->name('testing');
 
 Route::get('screenboardall', [ScreenboardController::class,'screenboardall'])->name('screenboardall');

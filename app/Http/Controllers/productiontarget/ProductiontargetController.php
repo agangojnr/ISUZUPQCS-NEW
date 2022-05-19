@@ -26,6 +26,7 @@ use App\Models\queryanswer\Queryanswer;
 use App\Models\querydefect\Querydefect;
 
 use App\Exports\ActualprodnView;
+use App\Exports\ExportDelayedUnits;
 use Excel;
 
 class ProductiontargetController extends Controller
@@ -459,7 +460,7 @@ class ProductiontargetController extends Controller
                                 $allMTDactual[$sp->id][] = $MTDactual;// + broughtfoward($sp->id,$showprodndays[$xx]);
 
                                 $varience[$sp->id][] = $fcst - $act;
-                                $allVarie[$sp->id][] = broughtfoward($sp->id,$showprodndays[$xx]);//$MTDfcst - $MTDactual;// -
+                                $allVarie[$sp->id][] = $MTDactual - $MTDfcst;//broughtfoward($sp->id,$showprodndays[$xx]);//;// -
                                 $balance[$sp->id][] = broughtfoward($sp->id,$showprodndays[$n]);
 
 
@@ -513,9 +514,13 @@ class ProductiontargetController extends Controller
                                 $countcvsched[] = $cvfcst; $MTDcvfcst += $cvfcst;
                                 $shMTDcvfcst[] = $MTDcvfcst;
 
-                                $cvact1 = UnitMovement::where([['datetime_out','=',$showprodndays[$n]],['route_id','=',1],['shop_id','=',16]])->count();
-                                $cvact2 = UnitMovement::where([['datetime_out','=',$showprodndays[$n]],['route_id','=',2],['shop_id','=',16]])->count();
-                                $cvact3 = UnitMovement::where([['datetime_out','=',$showprodndays[$n]],['route_id','=',3],['shop_id','=',16]])->count();
+                                $cvact1 = UnitMovement::where('datetime_out','=',$showprodndays[$n])
+									->where([['route_id',2],['shop_id','=',16]])->count();
+                                $cvact2 = UnitMovement::where('datetime_out','=',$showprodndays[$n])
+									->where([['route_id',4],['shop_id','=',16]])->count();
+                                $cvact3 = UnitMovement::where('datetime_out','=',$showprodndays[$n])
+									->where([['route_id',6],['shop_id','=',16]])->count();
+
                                 $cvact = $cvact1 + $cvact2 + $cvact3;
                                 $cvactual[] = $cvact; $MTDcvactual += $cvact;
                                 $shMTDcvactual[] = $MTDcvactual;
@@ -529,8 +534,10 @@ class ProductiontargetController extends Controller
                                 $countlcvsched[] = $lcvfcst; $MTDlcvfcst += $lcvfcst;
                                 $shMTDlcvfcst[] = $MTDlcvfcst;
 
-                                $lcvact1 = UnitMovement::where([['datetime_out','=',$showprodndays[$n]],['route_id','=',4] ,['shop_id','=',16]])->count();
-                                $lcvact2 = UnitMovement::where([['datetime_out','=',$showprodndays[$n]],['route_id','=',5],['shop_id','=',16]])->count();
+                                $lcvact1 = UnitMovement::where('datetime_out','=',$showprodndays[$n])
+									->where([['route_id','=',8] ,['shop_id','=',16]])->count();
+                                $lcvact2 = UnitMovement::where('datetime_out','=',$showprodndays[$n])
+									->where([['route_id','=',10] ,['shop_id','=',16]])->count();
                                 $lcvact = $lcvact1 + $lcvact2;
                                 $lcvactual[] = $lcvact; $MTDlcvactual += $lcvact;
                                 $shMTDlcvactual[] = $MTDlcvactual;
@@ -543,7 +550,9 @@ class ProductiontargetController extends Controller
                                 $countmpcsched[] = $mpcfcst; $MTDmpcfcst += $mpcfcst;
                                 $shMTDmpcfcst[] = $MTDmpcfcst;
 
-                                $mpcact = $cvact + $lcvact;
+                                $mpcact = UnitMovement::where('datetime_out','=',$showprodndays[$n])
+									->where('shop_id','=',16)->count();
+									//$cvact + $lcvact;
                                 $mpcactual[] = $mpcact;
                                 $MTDmpcactual += $mpcact;
                                 $shMTDmpcactual[] = $MTDmpcactual;
@@ -725,10 +734,12 @@ class ProductiontargetController extends Controller
             })->orWhere(function ($query) use ($first,$end) {
             $query->where('shop_id', 13)
                 ->whereBetween('datetime_out',[$first,$end]);
-            })->get(['datetime_in','vehicle_id','shop_id','datetime_out']);
+            })->get(['datetime_in','vehicle_id','shop_id','datetime_out','current_shop']);
 
         //$vehicles = Unitmovement::whereBetween('datetime_in',[$first,$end])->where('shop_id','=',27)
                                 //->get(['datetime_in','vehicle_id','shop_id']);
+
+
 
         if(count($vehicles) == 0){
             Toastr::error('Sorry! No vehicle produced this month.');
@@ -742,6 +753,16 @@ class ProductiontargetController extends Controller
             }else{
                 $offdate[$veh->vehicle_id] = "--";
             }
+
+
+            $currshop = Unitmovement::where([['current_shop','>',0],['vehicle_id',$veh->vehicle_id]])->value('current_shop');
+			if($currshop == ''){
+				$position[$veh->vehicle_id] = 'FCW';
+			}else{
+				$position[$veh->vehicle_id] = Shop::where('id',$currshop)->value('shop_name');
+			}
+
+
         }
         //return $offdate;
 
@@ -749,6 +770,7 @@ class ProductiontargetController extends Controller
             'vehicles'=>$vehicles,
             'offdate'=>$offdate,
             'range'=>$range,
+			'position'=>$position,
         );
         return view('productionschedule.actualproduction')->with($data);
     }
@@ -788,6 +810,14 @@ class ProductiontargetController extends Controller
             }else{
                 $offdate[$veh->vehicle_id] = "--";
             }
+
+			$currshop = Unitmovement::where([['current_shop','>',0],['vehicle_id',$veh->vehicle_id]])->value('current_shop');
+			if($currshop == ''){
+				$position[$veh->vehicle_id] = 'FCW';
+			}else{
+				$position[$veh->vehicle_id] = Shop::where('id',$currshop)->value('shop_name');
+			}
+
         }
         //return $offdate;
 
@@ -795,6 +825,7 @@ class ProductiontargetController extends Controller
             'vehicles'=>$vehicles,
             'offdate'=>$offdate,
             'range'=>$range,
+			'position'=>$position,
         );        return Excel::download(new ActualprodnView($data), 'actual.xlsx');
     }
 
@@ -1035,5 +1066,16 @@ public function delayedunits(){
     );
     return view('productionschedule.delayedunits')->with($data);
 }
+
+	public function delayedunitsExport(){
+		$today = carbon::today()->format("Y-m-d");
+		$delays = Unitmovement::where([['datetime_in','!=',$today],['current_shop','>',0]])->get();
+		$data = array(
+			'delays'=>$delays,
+			'today'=>$today,
+		);
+		return Excel::download(new ExportDelayedUnits($data), 'delayed_units.xlsx');
+		//return view('productionschedule.delayedunits')->with($data);
+	}
 
 }
